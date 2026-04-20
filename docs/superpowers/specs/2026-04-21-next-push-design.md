@@ -32,13 +32,38 @@ Next.js App Router 環境で Web Push 通知の **受信（クライアント）
 - TypeScript ネイティブで、Edge Runtime でも動く送信コードを求めている
 
 **v0.1 の成功基準:**
+
 - `pnpm add next-push` と `npx next-push init` の 2 コマンドで動作する雛形が揃う
 - README のクイックスタートで **15 分以内に購読→送信→通知表示** まで到達できる
 - `sendPush` が Edge Runtime（Route Handler / Middleware）で動く
 - 購読失効（404/410）を型で判別でき、ユーザーが DB から削除判断できる
-- 以下の環境で動作保証:
-  - Chrome / Edge / Firefox（デスクトップ・モバイル）
-  - **iOS 16.4+ の PWA インストール済み環境**（Safari タブ内は `isSupported: false` を正しく返す）
+- 下記「対応環境」を満たす
+
+### 3.1 対応環境
+
+| カテゴリ | 対応バージョン / 条件 |
+|---|---|
+| **Next.js** | 15.0+（App Router のみ、Pages Router 非対応） |
+| **React** | 18.0+ |
+| **Node.js** | 20.0+（開発・ビルド時） |
+| **TypeScript** | 5.0+（`strict: true` 前提） |
+| **デスクトップブラウザ** | |
+| Chrome / Edge (Win/Mac/Linux) | 最新 2 バージョン |
+| Firefox (Win/Mac/Linux) | 最新 2 バージョン |
+| Safari (macOS) | 16+ |
+| **Android** | |
+| Chrome | 最新 2 バージョン、通常タブで動作 |
+| Firefox | 最新 2 バージョン |
+| Samsung Internet | 最新 2 バージョン |
+| Chrome → ホーム画面追加（PWA） | 動作、バックグラウンド push 可 |
+| **iOS / iPadOS** | |
+| Safari タブ内 | ❌ 非対応（16.4+ でもブラウジング時は動かない、Apple 仕様） |
+| Safari + PWA インストール済み (16.4+) | ✅ 動作 |
+| iOS Chrome / Firefox / Edge | ❌ 非対応（iOS 全ブラウザは WebKit 使用 + アプリ内ブラウザは PWA 化不可） |
+| **その他** | |
+| WebView / アプリ内ブラウザ（LINE / Twitter 等） | ❌ 非対応（Service Worker 不可） |
+
+**iOS ユーザーへの案内:** Push を使うには「ホーム画面に追加」が必須。[use-pwa](https://github.com/piro0919/use-pwa) の `isPwa` 検出と組み合わせ、未インストール時は案内 UI を出す運用を README で推奨する。
 
 ## 4. パッケージ構成
 
@@ -248,6 +273,32 @@ export function registerAll(options: {
   'push' イベント          → showNotification(title, opts)
   'notificationclick'     → clients.openWindow(data.url ?? '/')
 ```
+
+### 6.1 購読情報の永続化（ユーザー側の責任範囲）
+
+ライブラリは DB を抱えないが、ユーザーが `onSubscribe` で保存する情報の **最小スキーマ** と運用指針を示す。
+
+**最小スキーマ:**
+
+```ts
+interface StoredSubscription {
+  endpoint: string;   // UNIQUE 制約 / PRIMARY KEY 推奨（購読の一意識別子）
+  p256dh: string;     // PushSubscription.keys.p256dh
+  auth: string;       // PushSubscription.keys.auth
+  userId?: string;    // ユーザーと紐付けるなら
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+**運用指針:**
+
+- `endpoint` に UNIQUE 制約を必ず付ける（同一購読の重複登録防止）
+- `sendPush` が `{ gone: true }` を返したら、`DELETE FROM subscriptions WHERE endpoint = ?` で削除
+- 再購読時は `endpoint` 衝突で UPSERT する（`ON CONFLICT (endpoint) DO UPDATE SET p256dh, auth, updated_at`）
+- ユーザーとの紐付けが必要なら `userId` カラムを追加（認証済みリクエストからセッションで取得）
+
+**README に掲載する例:** Prisma / Drizzle / 生 SQL での実装例。spec 本文では省略。
 
 ## 7. 環境変数
 
