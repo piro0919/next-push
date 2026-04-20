@@ -1,0 +1,134 @@
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import { base64UrlDecode } from "../core/base64";
+import type { PushSubscriptionJSON } from "../core/types";
+
+export interface UsePushOptions {
+  vapidPublicKey?: string;
+  apiPath?: string;
+  swPath?: string;
+}
+
+export interface UsePushReturn {
+  isSupported: boolean;
+  permission: NotificationPermission;
+  subscription: PushSubscriptionJSON | null;
+  isSubscribing: boolean;
+  error: Error | null;
+  subscribe(): Promise<PushSubscriptionJSON>;
+  unsubscribe(): Promise<void>;
+}
+
+let swRegistrationPromise: Promise<ServiceWorkerRegistration> | null = null;
+
+function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
+  if (swRegistrationPromise) return swRegistrationPromise;
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+    return Promise.reject(new Error("Service Worker not supported"));
+  }
+  swRegistrationPromise = navigator.serviceWorker.register(swPath).catch((e) => {
+    swRegistrationPromise = null;
+    throw e;
+  });
+  return swRegistrationPromise;
+}
+
+export function usePush(options: UsePushOptions = {}): UsePushReturn {
+  const vapidPublicKey =
+    options.vapidPublicKey ??
+    (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : undefined);
+  const apiPath = options.apiPath ?? "/api/push";
+  const swPath = options.swPath ?? "/sw.js";
+
+  const [isSupported, setIsSupported] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission>("default");
+  const [subscription, setSubscription] = useState<PushSubscriptionJSON | null>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const supported =
+      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    setIsSupported(supported);
+    if (!supported) return;
+
+    setPermission(Notification.permission);
+
+    void (async () => {
+      try {
+        const reg = await getOrRegisterSW(swPath);
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) setSubscription(sub.toJSON() as PushSubscriptionJSON);
+      } catch (e) {
+        setError(e instanceof Error ? e : new Error(String(e)));
+      }
+    })();
+  }, [swPath]);
+
+  const subscribe = useCallback(async (): Promise<PushSubscriptionJSON> => {
+    if (!vapidPublicKey) {
+      const err = new Error(
+        "vapidPublicKey missing. Pass it to usePush or set NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+      );
+      setError(err);
+      throw err;
+    }
+    setIsSubscribing(true);
+    setError(null);
+    try {
+      const perm = await Notification.requestPermission();
+      setPermission(perm);
+      if (perm !== "granted") throw new Error(`Permission ${perm}`);
+      const reg = await getOrRegisterSW(swPath);
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlDecode(vapidPublicKey).buffer as ArrayBuffer,
+      });
+      const subJson = sub.toJSON() as PushSubscriptionJSON;
+      const res = await fetch(apiPath, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(subJson),
+      });
+      if (!res.ok) throw new Error(`Subscribe POST failed: ${res.status}`);
+      setSubscription(subJson);
+      return subJson;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      throw err;
+    } finally {
+      setIsSubscribing(false);
+    }
+  }, [vapidPublicKey, apiPath, swPath]);
+
+  const unsubscribe = useCallback(async () => {
+    setError(null);
+    try {
+      const reg = await getOrRegisterSW(swPath);
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+        await fetch(`${apiPath}?endpoint=${encodeURIComponent(sub.endpoint)}`, {
+          method: "DELETE",
+        });
+      }
+      setSubscription(null);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      throw err;
+    }
+  }, [apiPath, swPath]);
+
+  return {
+    isSupported,
+    permission,
+    subscription,
+    isSubscribing,
+    error,
+    subscribe,
+    unsubscribe,
+  };
+}
