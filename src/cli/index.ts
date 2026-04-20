@@ -1,2 +1,38 @@
 #!/usr/bin/env node
-export {};
+import { Command } from "commander";
+import { runInit } from "./commands/init";
+import { generateKeysOutput } from "./commands/keys";
+
+const program = new Command();
+program.name("next-push").description("Web Push tools for Next.js").version("0.1.0");
+
+program
+  .command("keys:generate")
+  .description("Generate a new VAPID key pair")
+  .option("-s, --subject <subject>", "mailto: or URL for the VAPID subject")
+  .action(async (opts: { subject?: string }) => {
+    const lines = await generateKeysOutput(opts.subject);
+    for (const l of lines) console.log(l);
+  });
+
+program
+  .command("init")
+  .description("Scaffold next-push into a Next.js project")
+  .option("--send-only", "only generate server-side files")
+  .option("--receive-only", "only generate client/SW files")
+  .option("--force", "overwrite existing files")
+  .option("--sw-addon", "generate public/next-push-sw.js and show importScripts recipe")
+  .option("--skip-sw", "skip service worker file generation")
+  .action(
+    async (opts: {
+      sendOnly?: boolean;
+      receiveOnly?: boolean;
+      force?: boolean;
+      swAddon?: boolean;
+      skipSw?: boolean;
+    }) => {
+      await runInit(opts);
+    },
+  );
+
+program.parseAsync();
