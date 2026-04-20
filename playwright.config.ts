@@ -26,18 +26,13 @@ export default defineConfig({
       },
     },
   ],
-  // Run against the production build because Serwist SW generation is disabled in development
-  // (disable: process.env.NODE_ENV === 'development' in next.config.ts). The SW is required for
-  // push subscriptions to work, so we must use a production build.
-  //
-  // We force webpack (--webpack) for the build because Serwist's @serwist/next uses a webpack
-  // plugin to generate public/sw.js, and it does not support Turbopack. The next.config.ts has
-  // `turbopack: {}` which would otherwise activate Turbopack for the production build too.
+  // Run against `pnpm dev` — @serwist/turbopack serves the SW dynamically via
+  // the /serwist/[...path] Route Handler, so no production build is needed.
   webServer: {
-    command: "pnpm exec next build --webpack && pnpm start",
+    command: "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000, // build takes time
+    timeout: 120_000,
     stdout: "pipe",
     stderr: "pipe",
   },

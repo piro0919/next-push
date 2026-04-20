@@ -88,7 +88,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
     "@playwright/test": "^1.59.1",
-    "@serwist/next": "^9.5.7",
+    "@serwist/turbopack": "^9.5.7",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.6.0",
@@ -96,6 +96,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "esbuild-wasm": "^0.28.0",
     "happy-dom": "^20.9.0",
     "lefthook": "^2.1.6",
     "next": "^16.2.4",

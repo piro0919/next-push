@@ -3,7 +3,10 @@ import { useState } from "react";
 import { usePush } from "../../client";
 
 export default function PushDemoPage() {
-  const push = usePush();
+  // Demo uses Serwist on Turbopack, which serves the SW at /serwist/sw.js
+  // instead of the default /sw.js. End users of the library who use the
+  // `next-push init` template will get public/sw.js and can omit swPath.
+  const push = usePush({ swPath: "/serwist/sw.js" });
   const [sending, setSending] = useState(false);
 
   async function sendTest() {

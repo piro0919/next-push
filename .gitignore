@@ -9,3 +9,4 @@ coverage/
 playwright-report/
 test-results/
 e2e-results/
+public/sw.js
