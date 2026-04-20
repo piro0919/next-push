@@ -26,10 +26,34 @@ function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return Promise.reject(new Error("Service Worker not supported"));
   }
-  swRegistrationPromise = navigator.serviceWorker.register(swPath).catch((e) => {
-    swRegistrationPromise = null;
-    throw e;
-  });
+  swRegistrationPromise = navigator.serviceWorker
+    .register(swPath)
+    .then((reg) => {
+      // Wait for the SW to become active before returning, because
+      // PushManager.subscribe() requires an active Service Worker.
+      if (reg.active) return reg;
+      return new Promise<ServiceWorkerRegistration>((resolve, reject) => {
+        const sw = reg.installing ?? reg.waiting;
+        if (!sw) {
+          // Already active via a different path — use navigator.serviceWorker.ready
+          navigator.serviceWorker.ready.then(resolve).catch(reject);
+          return;
+        }
+        sw.addEventListener("statechange", function handler() {
+          if (sw.state === "activated") {
+            sw.removeEventListener("statechange", handler);
+            resolve(reg);
+          } else if (sw.state === "redundant") {
+            sw.removeEventListener("statechange", handler);
+            reject(new Error("Service Worker became redundant"));
+          }
+        });
+      });
+    })
+    .catch((e) => {
+      swRegistrationPromise = null;
+      throw e;
+    });
   return swRegistrationPromise;
 }
 

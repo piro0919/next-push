@@ -6,3 +6,6 @@ dist/
 *.log
 coverage/
 .vercel
+playwright-report/
+test-results/
+e2e-results/
