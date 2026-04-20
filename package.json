@@ -29,37 +29,37 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/client/index.d.mts",
-        "default": "./dist/client/index.mjs"
-      },
-      "require": {
         "types": "./dist/client/index.d.ts",
         "default": "./dist/client/index.js"
+      },
+      "require": {
+        "types": "./dist/client/index.d.cts",
+        "default": "./dist/client/index.cjs"
       }
     },
     "./server": {
       "import": {
-        "types": "./dist/server/index.d.mts",
-        "default": "./dist/server/index.mjs"
-      },
-      "require": {
         "types": "./dist/server/index.d.ts",
         "default": "./dist/server/index.js"
+      },
+      "require": {
+        "types": "./dist/server/index.d.cts",
+        "default": "./dist/server/index.cjs"
       }
     },
     "./sw": {
       "import": {
-        "types": "./dist/sw/index.d.mts",
-        "default": "./dist/sw/index.mjs"
-      },
-      "require": {
         "types": "./dist/sw/index.d.ts",
         "default": "./dist/sw/index.js"
+      },
+      "require": {
+        "types": "./dist/sw/index.d.cts",
+        "default": "./dist/sw/index.cjs"
       }
     }
   },
   "bin": {
-    "next-push": "./dist/cli/index.mjs"
+    "next-push": "./dist/cli/index.js"
   },
   "files": [
     "dist"
