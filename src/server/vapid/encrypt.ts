@@ -71,7 +71,7 @@ export async function encryptPayload(input: EncryptInput): Promise<EncryptOutput
   );
 
   // 8. Plaintext + padding delimiter (0x02), no extra padding for v0.1
-  const padded = new Uint8Array(input.payload.length + 1);
+  const padded = new Uint8Array(new ArrayBuffer(input.payload.length + 1));
   padded.set(input.payload, 0);
   padded[input.payload.length] = 0x02;
 
@@ -100,16 +100,16 @@ async function hkdfOne(
   ikm: Uint8Array,
   info: Uint8Array,
   length: number,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   if (length > 32) throw new Error("hkdfOne supports length <= 32 (single HMAC-SHA256 block)");
   const saltKey = await crypto.subtle.importKey(
     "raw",
-    salt,
+    toArrayBuffer(salt),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
   );
-  const prk = new Uint8Array(await crypto.subtle.sign("HMAC", saltKey, ikm));
+  const prk = new Uint8Array(await crypto.subtle.sign("HMAC", saltKey, toArrayBuffer(ikm)));
   const prkKey = await crypto.subtle.importKey(
     "raw",
     prk,
@@ -118,9 +118,24 @@ async function hkdfOne(
     ["sign"],
   );
   const t1 = new Uint8Array(
-    await crypto.subtle.sign("HMAC", prkKey, concat(info, Uint8Array.of(0x01))),
+    await crypto.subtle.sign("HMAC", prkKey, toArrayBuffer(concat(info, Uint8Array.of(0x01)))),
   );
-  return t1.slice(0, length);
+  const result = new Uint8Array(new ArrayBuffer(length));
+  result.set(t1.subarray(0, length));
+  return result;
+}
+
+function toArrayBuffer(u8: Uint8Array): Uint8Array<ArrayBuffer> {
+  if (
+    u8.buffer instanceof ArrayBuffer &&
+    u8.byteOffset === 0 &&
+    u8.byteLength === u8.buffer.byteLength
+  ) {
+    return u8 as Uint8Array<ArrayBuffer>;
+  }
+  const buf = new Uint8Array(new ArrayBuffer(u8.byteLength));
+  buf.set(u8);
+  return buf;
 }
 
 function concat(...parts: Uint8Array[]): Uint8Array {
