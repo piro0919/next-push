@@ -4,7 +4,10 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    "types": ["node"]
   },
   "include": [
     "src/client/**/*.ts",

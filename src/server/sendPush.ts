@@ -59,7 +59,7 @@ export async function sendPush<T extends PushPayload = PushPayload>(
     const res = await fetch(subscription.endpoint, {
       method: "POST",
       headers,
-      body: ciphertext,
+      body: ciphertext as BodyInit,
     });
 
     if (res.status >= 200 && res.status < 300) {
