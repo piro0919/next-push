@@ -20,7 +20,7 @@ Next.js App Router 環境で Web Push 通知の **受信（クライアント）
 - トピック / チャンネル管理
 - 送信バッチ最適化・レート制御
 - 管理 UI・分析ダッシュボード
-- iOS Safari 固有の細かい不具合の個別対応（best effort）
+- iOS の A2HS（Add to Home Screen）促進 UI — [use-pwa](https://github.com/piro0919/use-pwa) との併用を推奨
 - React Native / Expo
 - Electron 対応（v0.2 以降で検討）
 
@@ -34,8 +34,11 @@ Next.js App Router 環境で Web Push 通知の **受信（クライアント）
 **v0.1 の成功基準:**
 - `pnpm add next-push` と `npx next-push init` の 2 コマンドで動作する雛形が揃う
 - README のクイックスタートで **15 分以内に購読→送信→通知表示** まで到達できる
-- `sendPush` が Vercel の Edge Runtime（Route Handler / Middleware）で動く
+- `sendPush` が Edge Runtime（Route Handler / Middleware）で動く
 - 購読失効（404/410）を型で判別でき、ユーザーが DB から削除判断できる
+- 以下の環境で動作保証:
+  - Chrome / Edge / Firefox（デスクトップ・モバイル）
+  - **iOS 16.4+ の PWA インストール済み環境**（Safari タブ内は `isSupported: false` を正しく返す）
 
 ## 4. パッケージ構成
 
@@ -157,22 +160,63 @@ export type PushPayload = {
 
 ### 5.3 Service Worker: `next-push/sw`
 
+SW は「おまけ」ではなく第一級サポート対象。以下のイベントを型付きヘルパーで扱う。
+
 ```ts
 export function handlePush(
   event: PushEvent,
   handler?: (payload: PushPayload) => NotificationOptions & { title: string },
 ): void;
 
+/**
+ * notificationclick のハンドラ。
+ * - 同じ URL のタブが既に開いていれば focus する
+ * - 無ければ新規 open
+ * - handler が null を返したら何もしない
+ */
 export function handleClick(
   event: NotificationEvent,
   handler?: (data: unknown, notification: Notification) => string | null,
 ): void;
+
+export function handleClose(
+  event: NotificationEvent,
+  handler: (notification: Notification) => void | Promise<void>,
+): void;
+
+/**
+ * pushsubscriptionchange でエンドポイントが失効/変更されたとき、
+ * 自動で再購読し、サーバーに通知する。
+ */
+export function handleSubscriptionChange(
+  event: Event,
+  options: {
+    vapidPublicKey: string;
+    apiPath?: string;  // default: '/api/push'
+  },
+): void;
+
+/** 上記4つをまとめて登録するショートカット */
+export function registerAll(options: {
+  vapidPublicKey: string;
+  apiPath?: string;
+  onPush?: (payload: PushPayload) => NotificationOptions & { title: string };
+  onClick?: (data: unknown, notification: Notification) => string | null;
+  onClose?: (notification: Notification) => void | Promise<void>;
+}): void;
 ```
 
 **提供形態（v0.1）:**
-- `next-push init` が `templates/sw.js` を `public/sw.js` にコピーする
-- `public/sw.js` はスタンドアロンで動く最小実装（外部 import に依存しない）
-- 高度なカスタマイズをしたいユーザーは、自前 SW から `next-push/sw` の関数を import して使う（ただしバンドリングは各自の責任）
+
+- **デフォルトルート（推奨）**: `next-push init` が `public/sw.js` を生成。スタンドアロンで動き、主要機能全部入り。外部 import 不要
+- **Serwist 併用**: Serwist の SW（例: `src/app/sw.ts`）に `import { registerAll } from 'next-push/sw'` を追記するだけで共存可能。README にレシピを掲載
+- **カスタム SW**: `next-push/sw` の関数を import して自前で組み立て可能（バンドリングはユーザー責任）
+
+**開発体験:**
+
+- `NODE_ENV !== 'production'` では SW 登録をスキップ（use-pwa と同じ挙動、Turbopack/HMR 対策）
+- `apiPath` は client / sw で揃える必要があるため、環境変数 `NEXT_PUBLIC_PUSH_API_PATH` で統一可能
+- SW のパスは `/sw.js` をデフォルトとするが、`usePush({ swPath })` でカスタマイズ可能
 
 ## 6. データフロー
 
@@ -219,16 +263,70 @@ export function handleClick(
 
 ```bash
 pnpm add next-push
-npx next-push init
+npx next-push init                  # フル構成（送受信、デフォルト）
+npx next-push init --send-only      # サーバーから送信するだけ
+npx next-push init --receive-only   # クライアントで受信するだけ
 ```
 
-`init` の動作:
-1. `public/sw.js` を配置（既存がある場合は `--force` なしでは上書きしない）
-2. `.env.local` に VAPID 鍵 3 件を追記（既存値があればスキップ）
-3. `app/api/push/route.ts` のサンプルを生成
-4. `usePush()` を使った最小サンプル `app/push-demo/page.tsx` をオプションで生成
+インタラクティブプロンプトは使わない（スクリプト化しやすさを優先）。80% のユーザーはフル構成で十分、残りはフラグで切り替える。
 
-既存ファイルは触らない方針（`--force` で上書き許可）。
+### 8.1 フル構成 (`init`) が生成するもの
+
+| 生成物 | フル | `--send-only` | `--receive-only` |
+|---|:---:|:---:|:---:|
+| `public/sw.js`（または追記レシピ）                 | ✅ | — | ✅ |
+| `.env.local` → `NEXT_PUBLIC_VAPID_PUBLIC_KEY`     | ✅ | — | ✅ |
+| `.env.local` → `VAPID_PRIVATE_KEY` + `VAPID_SUBJECT` | ✅ | ✅ | — |
+| `app/api/push/route.ts`（Route Handler サンプル）  | ✅ | — | ✅ |
+| `lib/send-push-example.ts`（`sendPush` 使用例）    | ✅ | ✅ | — |
+| `app/push-demo/page.tsx`（動作確認用の画面）        | ✅ | — | ✅ |
+
+### 8.2 既存 Service Worker の検出
+
+`init` はまず既存 SW の状態を検出して分岐する（フル または `--receive-only` の場合のみ）:
+
+1. **`src/app/sw.ts` を検出**（Serwist の手書き SW）
+   → `public/sw.js` は生成しない。以下のレシピを表示:
+   ```
+   ⚠️  Serwist の SW を検出しました。src/app/sw.ts に以下を追加してください:
+
+      import { registerAll } from 'next-push/sw';
+      registerAll({ vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY! });
+   ```
+
+2. **`public/sw.js` を検出**
+   → 以下のメッセージを表示して終了（自動選択しない、事故防止のため明示コマンドを要求）:
+   ```
+   ⚠️  public/sw.js が既に存在します。以下から選択してください:
+
+      --force           既存を上書き
+      --sw-addon        public/next-push-sw.js を生成し、既存 SW から importScripts する
+      --skip-sw         SW 生成をスキップ（他のファイルだけ生成）
+   ```
+
+3. **どちらもなし**
+   → `public/sw.js` をそのまま生成
+
+### 8.3 完了サマリー
+
+実行後、生成物と次のアクションを表示:
+
+```
+✓ public/sw.js を生成
+✓ .env.local に VAPID 鍵 3 つを追加
+✓ app/api/push/route.ts を生成
+✓ app/push-demo/page.tsx を生成
+✓ lib/send-push-example.ts を生成
+
+次のステップ:
+  - pnpm dev で起動し、/push-demo にアクセスして動作確認
+  - 送信サンプルは lib/send-push-example.ts を参照
+```
+
+### 8.4 安全策
+
+- 既存ファイルは原則上書きしない（SW 以外は `--force` で上書き）
+- `.env.local` は追記のみ、同名キーが既にあれば **更新しない**（誤って運用中の鍵を壊さないため）
 
 ## 9. テスト戦略
 
@@ -243,10 +341,15 @@ npx next-push init
 
 `peerDependencies`: `react >=18`, `next >=15`。
 
-## 10. Edge Runtime 対応
+## 10. Runtime Agnostic（Node.js / Edge / Cloudflare Workers 対応）
 
-- `server/` の全関数は `crypto.subtle`, `Uint8Array`, `fetch`, `TextEncoder` のみ使用
-- `node:crypto`, `Buffer`, `process.nextTick` 等を **禁止リスト** として依存しない
+2026 年現在、Vercel は Fluid Compute（Node.js）を推奨しており、純粋な Edge Functions の存在感は薄れている。ただし Cloudflare Workers / Deno Deploy / Next.js middleware では引き続き Edge 系ランタイムが使われる。
+
+**方針:** 「Edge First」ではなく **Runtime agnostic** を掲げる。Web 標準 API のみ使えば Node / Edge 両方で動き、結果的に Cloudflare Workers などでもそのまま動く。
+
+**実装ルール:**
+
+- `server/` の全関数は `crypto.subtle`, `Uint8Array`, `fetch`, `TextEncoder`, `TextDecoder` のみ使用
 - ECDH（P-256）と HKDF は Web Crypto API で実装。外部依存（`@peculiar/*` 等）は最小化
 - `createPushHandler` は Runtime agnostic（Node / Edge どちらの Route Handler でも動く）
 
