@@ -71,7 +71,7 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
   }
   if (envLines.length > 0) {
     const sep = envExisting && !envExisting.endsWith("\n") ? "\n" : "";
-    writeFileSync(envPath, envExisting + sep + envLines.join("\n") + "\n");
+    writeFileSync(envPath, `${envExisting + sep + envLines.join("\n")}\n`);
     generated.push(".env.local");
   }
 

@@ -1,7 +1,18 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
   "files": {
-    "includes": ["**/*.ts", "**/*.tsx", "**/*.json", "**/*.js", "**/*.mjs"],
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.json",
+      "**/*.js",
+      "**/*.mjs",
+      "!dist",
+      "!.next",
+      "!node_modules",
+      "!public/sw.js",
+      "!pnpm-lock.yaml"
+    ],
     "ignoreUnknown": false
   },
   "formatter": {

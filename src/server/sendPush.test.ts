@@ -102,10 +102,10 @@ describe("sendPush", () => {
     expect(init.method).toBe("POST");
     expect(init.headers["Content-Encoding"]).toBe("aes128gcm");
     expect(init.headers["Content-Type"]).toBe("application/octet-stream");
-    expect(init.headers["TTL"]).toBe("120");
-    expect(init.headers["Urgency"]).toBe("high");
-    expect(init.headers["Topic"]).toBe("chat");
-    expect(init.headers["Authorization"]).toMatch(/^vapid t=ey.+, k=.+/);
+    expect(init.headers.TTL).toBe("120");
+    expect(init.headers.Urgency).toBe("high");
+    expect(init.headers.Topic).toBe("chat");
+    expect(init.headers.Authorization).toMatch(/^vapid t=ey.+, k=.+/);
   });
 
   it("returns error result when fetch throws", async () => {

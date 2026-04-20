@@ -53,8 +53,8 @@ export async function sendPush<T extends PushPayload = PushPayload>(
       TTL: String(ttl),
       Authorization: `vapid t=${jwt}, k=${publicKey}`,
     };
-    if (config.urgency) headers["Urgency"] = config.urgency;
-    if (config.topic) headers["Topic"] = config.topic;
+    if (config.urgency) headers.Urgency = config.urgency;
+    if (config.topic) headers.Topic = config.topic;
 
     const res = await fetch(subscription.endpoint, {
       method: "POST",
