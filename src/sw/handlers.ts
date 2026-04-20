@@ -1,6 +1,13 @@
 import type { PushPayload } from "../core/types";
 
-type PushHandler = (payload: unknown) => NotificationOptions & { title: string };
+// `image` and `actions` are valid browser fields but not in all TS lib versions of NotificationOptions
+type NotificationSpec = NotificationOptions & {
+  title: string;
+  image?: string;
+  actions?: Array<{ action: string; title: string; icon?: string }>;
+};
+
+type PushHandler = (payload: unknown) => NotificationSpec;
 
 export function handlePush(event: PushEvent, handler?: PushHandler): void {
   let payload: unknown;
@@ -17,7 +24,7 @@ export function handlePush(event: PushEvent, handler?: PushHandler): void {
   event.waitUntil(reg.showNotification(title, options));
 }
 
-function defaultNotificationSpec(p: PushPayload | null): NotificationOptions & { title: string } {
+function defaultNotificationSpec(p: PushPayload | null): NotificationSpec {
   return {
     title: p?.title ?? "Notification",
     body: p?.body,
