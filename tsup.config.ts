@@ -1,3 +1,4 @@
+import { copyFileSync, mkdirSync } from "node:fs";
 import { defineConfig } from "tsup";
 
 export default defineConfig({
@@ -13,4 +14,8 @@ export default defineConfig({
   sourcemap: true,
   external: ["react", "react-dom", "next"],
   tsconfig: "tsconfig.build.json",
+  onSuccess: async () => {
+    mkdirSync("dist/templates", { recursive: true });
+    copyFileSync("templates/sw.js", "dist/templates/sw.js");
+  },
 });
