@@ -36,6 +36,8 @@ export async function PUT(req: Request): Promise<Response> {
     ...(body.tag?.trim() && { tag: body.tag.trim() }),
     ...(body.url?.trim() && { url: body.url.trim() }),
   };
-  const result = await sendPush(sub, payload);
+  // urgency: "high" bypasses Android Doze / Adaptive Battery batching so the
+  // demo notification arrives immediately instead of seconds later.
+  const result = await sendPush(sub, payload, { urgency: "high" });
   return Response.json({ sent: result.ok ? 1 : 0, results: [result] });
 }
