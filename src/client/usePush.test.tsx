@@ -130,4 +130,29 @@ describe("usePush", () => {
       }),
     ).rejects.toThrow(/vapidPublicKey/);
   });
+
+  it("uses separate registrations for different swPaths", async () => {
+    const registerMock = navigator.serviceWorker.register as ReturnType<typeof vi.fn>;
+    registerMock.mockClear();
+
+    const { result: r1 } = renderHook(() =>
+      usePush({
+        vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789",
+        swPath: "/sw-a.js",
+      }),
+    );
+    await waitFor(() => expect(r1.current.isSupported).toBe(true));
+
+    const { result: r2 } = renderHook(() =>
+      usePush({
+        vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789",
+        swPath: "/sw-b.js",
+      }),
+    );
+    await waitFor(() => expect(r2.current.isSupported).toBe(true));
+
+    const calls = registerMock.mock.calls.map((c) => c[0] as string);
+    expect(calls).toContain("/sw-a.js");
+    expect(calls).toContain("/sw-b.js");
+  });
 });

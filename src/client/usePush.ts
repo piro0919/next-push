@@ -19,19 +19,20 @@ export interface UsePushReturn {
   unsubscribe(): Promise<void>;
 }
 
-let swRegistrationPromise: Promise<ServiceWorkerRegistration> | null = null;
+const swRegistrations = new Map<string, Promise<ServiceWorkerRegistration>>();
 
 /** @internal — resets the cached SW registration promise (for testing only) */
 export function _resetSwRegistration(): void {
-  swRegistrationPromise = null;
+  swRegistrations.clear();
 }
 
 function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
-  if (swRegistrationPromise) return swRegistrationPromise;
+  const cached = swRegistrations.get(swPath);
+  if (cached) return cached;
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return Promise.reject(new Error("Service Worker not supported"));
   }
-  swRegistrationPromise = navigator.serviceWorker
+  const promise = navigator.serviceWorker
     .register(swPath)
     .then((reg) => {
       // Wait for the SW to become active before returning, because
@@ -56,10 +57,11 @@ function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
       });
     })
     .catch((e) => {
-      swRegistrationPromise = null;
+      swRegistrations.delete(swPath);
       throw e;
     });
-  return swRegistrationPromise;
+  swRegistrations.set(swPath, promise);
+  return promise;
 }
 
 export function usePush(options: UsePushOptions = {}): UsePushReturn {
