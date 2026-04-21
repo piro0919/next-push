@@ -6,6 +6,8 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-22
+
 ### Added
 
 - `SendOptions` gains `onSuccess` / `onGone` / `onFailure` observability hooks
@@ -13,17 +15,6 @@ before 1.0 may land in minor releases.
   based on the outcome; thrown errors and rejected promises from hooks are
   swallowed and logged via `console.warn` so observability never breaks the
   push flow. See the new Observability hooks recipe in the README.
-
-### Security
-
-- Demo **Send notification** no longer broadcasts to every stored subscription.
-  The caller must include their own subscription endpoint in the PUT body, and
-  the server only sends to that single subscription. This prevents a visitor
-  from spamming notifications to other visitors who subscribed on the same
-  Vercel Function instance.
-
-### Added
-
 - Persistence recipes in `docs/recipes/` — Upstash Redis and Neon Postgres,
   both via the Vercel Marketplace, with broadcast, per-user indexing, and
   gone-subscription pruning patterns.
@@ -47,8 +38,18 @@ before 1.0 may land in minor releases.
 
 ### Fixed
 
+- Demo sends now set `urgency: "high"` so Android Doze / Adaptive Battery no
+  longer batches delivery for several seconds after pressing Send.
 - `tsconfig.tsbuildinfo` is now gitignored; it was previously tracked and
   generated diff noise on every compile.
+
+### Security
+
+- Demo **Send notification** no longer broadcasts to every stored subscription.
+  The caller must include their own subscription endpoint in the PUT body, and
+  the server only sends to that single subscription. This prevents a visitor
+  from spamming notifications to other visitors who subscribed on the same
+  Vercel Function instance.
 
 ## [0.2.0] — 2026-04
 
