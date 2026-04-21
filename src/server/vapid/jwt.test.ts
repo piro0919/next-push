@@ -55,4 +55,17 @@ describe("signVAPIDJWT", () => {
     });
     expect(jwt.split(".")[2].length).toBe(86);
   });
+
+  it("payload contains iat claim within 1s of now", async () => {
+    const { privateKey } = await generateVAPIDKeys();
+    const now = Math.floor(Date.now() / 1000);
+    const jwt = await signVAPIDJWT({
+      privateKey,
+      audience: "https://example.com",
+      subject: "mailto:a@b.c",
+    });
+    const payload = JSON.parse(b64urlDecodeToString(jwt.split(".")[1]));
+    expect(payload.iat).toBeGreaterThanOrEqual(now - 1);
+    expect(payload.iat).toBeLessThanOrEqual(now + 1);
+  });
 });

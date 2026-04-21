@@ -16,6 +16,7 @@ export async function signVAPIDJWT(opts: SignVAPIDJWTOptions): Promise<string> {
   const payload = {
     aud: opts.audience,
     sub: opts.subject,
+    iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + expiresIn,
   };
 
