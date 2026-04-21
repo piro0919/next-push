@@ -5,7 +5,7 @@ Web Push notifications for Next.js — client hooks, server sender, and Service 
 [![npm](https://img.shields.io/npm/v/@piro0919/next-push.svg)](https://www.npmjs.com/package/@piro0919/next-push)
 [![license](https://img.shields.io/npm/l/@piro0919/next-push.svg)](./LICENSE)
 
-**🔗 [Live Demo](https://next-push.kkweb.io/)** — subscribe in Chrome/Edge, press "Send test notification", get a real notification.
+**🔗 [Live Demo](https://next-push.kkweb.io/)** — subscribe in Chrome/Edge, tweak the payload (title, body, icon, image, tag, click URL), hit **Send notification**, and get a real push.
 
 ## Why
 
@@ -260,8 +260,11 @@ console.error("Push failed permanently", result.statusCode, result.error);
 
 ## Roadmap
 
-- v0.2: batched sending, Playwright E2E, richer A2HS recipes, Electron
-- v1.0: stable API, semver
+- **v0.2** (current) — batched sending, Playwright E2E (Chromium + Firefox), WebKit smoke, customizable demo, GitHub Actions CI
+- **v0.3** — persistence adapter recipes (Upstash Redis, Neon Postgres), observability hooks, verified iOS PWA / Android Chrome E2E
+- **v1.0** — stable API with semver
+
+See [CHANGELOG.md](./CHANGELOG.md) for release notes.
 
 ## License
 
