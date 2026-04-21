@@ -34,6 +34,22 @@ export async function sendPush<T extends PushPayload = PushPayload>(
     };
   }
 
+  if (
+    !subscription?.endpoint ||
+    typeof subscription.endpoint !== "string" ||
+    !subscription.endpoint.startsWith("https://") ||
+    !subscription.keys?.p256dh ||
+    !subscription.keys?.auth
+  ) {
+    return {
+      ok: false,
+      gone: false,
+      error: new Error(
+        "Invalid subscription: endpoint must be https:// and keys.p256dh/auth must be present",
+      ),
+    };
+  }
+
   try {
     const audience = new URL(subscription.endpoint).origin;
     const jwt = await signVAPIDJWT({ privateKey, audience, subject });

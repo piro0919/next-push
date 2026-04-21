@@ -5,12 +5,12 @@ export interface SignVAPIDJWTOptions {
   privateKey: string;
   audience: string;
   subject: string;
-  /** seconds; default 12 hours; max 24 hours per RFC 8292 */
+  /** seconds; default 12 hours; max 24 hours - 60s per RFC 8292 (60s safety margin for clock skew) */
   expiresIn?: number;
 }
 
 export async function signVAPIDJWT(opts: SignVAPIDJWTOptions): Promise<string> {
-  const expiresIn = Math.min(opts.expiresIn ?? 12 * 60 * 60, 24 * 60 * 60);
+  const expiresIn = Math.min(opts.expiresIn ?? 12 * 60 * 60, 24 * 60 * 60 - 60);
 
   const header = { alg: "ES256", typ: "JWT" };
   const payload = {

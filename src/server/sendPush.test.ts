@@ -122,6 +122,50 @@ describe("sendPush", () => {
     }
   });
 
+  describe("subscription shape validation", () => {
+    it("returns ok:false, gone:false when endpoint is missing", async () => {
+      const result = await sendPush(
+        { endpoint: undefined as unknown as string, keys: subscriberKeys },
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c" },
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.gone).toBe(false);
+        expect(result.error.message).toMatch(/Invalid subscription/);
+      }
+    });
+
+    it("returns ok:false, gone:false when endpoint does not start with https://", async () => {
+      const result = await sendPush(
+        { endpoint: "http://fcm.googleapis.com/fcm/send/abc", keys: subscriberKeys },
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c" },
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.gone).toBe(false);
+        expect(result.error.message).toMatch(/Invalid subscription/);
+      }
+    });
+
+    it("returns ok:false, gone:false when keys.p256dh is missing", async () => {
+      const result = await sendPush(
+        {
+          endpoint: "https://fcm.googleapis.com/fcm/send/abc",
+          keys: { p256dh: undefined as unknown as string, auth: subscriberKeys.auth },
+        },
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c" },
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.gone).toBe(false);
+        expect(result.error.message).toMatch(/Invalid subscription/);
+      }
+    });
+  });
+
   it("returns error result when VAPID keys are missing", async () => {
     const prevPub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     const prevPriv = process.env.VAPID_PRIVATE_KEY;

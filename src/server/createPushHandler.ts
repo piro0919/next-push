@@ -13,17 +13,32 @@ export interface PushHandler {
 export function createPushHandler(config: CreatePushHandlerConfig): PushHandler {
   return {
     async POST(req) {
+      // Check Content-Length header first (fast path, present in real HTTP requests).
+      // Also read raw body text to enforce the limit when the header is absent (e.g. in tests).
+      const contentLengthHeader = Number(req.headers.get("content-length") ?? "-1");
+      if (contentLengthHeader > 8192) {
+        return new Response("Payload too large", { status: 413 });
+      }
       try {
-        const body = (await req.json()) as Partial<PushSubscriptionJSON>;
-        if (!body.endpoint || !body.keys?.p256dh || !body.keys?.auth) {
+        const rawText = await req.text();
+        if (rawText.length > 8192) {
+          return new Response("Payload too large", { status: 413 });
+        }
+        const body = JSON.parse(rawText) as Partial<PushSubscriptionJSON>;
+        if (
+          !body.endpoint ||
+          typeof body.endpoint !== "string" ||
+          !body.endpoint.startsWith("https://") ||
+          !body.keys?.p256dh ||
+          !body.keys?.auth
+        ) {
           return new Response("Invalid subscription", { status: 400 });
         }
         await config.onSubscribe(body as PushSubscriptionJSON, req);
         return new Response(null, { status: 201 });
       } catch (e) {
-        return new Response(e instanceof Error ? e.message : "Error", {
-          status: 500,
-        });
+        console.error("[next-push] POST /api/push error:", e);
+        return new Response("Internal error", { status: 500 });
       }
     },
     async DELETE(req) {
@@ -36,12 +51,14 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
         if (!endpoint) {
           return new Response("Missing endpoint", { status: 400 });
         }
+        if (!endpoint.startsWith("https://")) {
+          return new Response("Invalid endpoint", { status: 400 });
+        }
         await config.onUnsubscribe(endpoint, req);
         return new Response(null, { status: 204 });
       } catch (e) {
-        return new Response(e instanceof Error ? e.message : "Error", {
-          status: 500,
-        });
+        console.error("[next-push] DELETE /api/push error:", e);
+        return new Response("Internal error", { status: 500 });
       }
     },
   };
