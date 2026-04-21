@@ -155,6 +155,96 @@ export function NotifyButton() {
 }
 ```
 
+### Rich notification UI (icons, badges, actions)
+
+Send payloads can carry full `Notification` options:
+
+```ts
+await sendPush(subscription, {
+  title: "New message from Alice",
+  body: "Hi! When are you free?",
+  icon: "/icons/icon-192.png",        // Main notification icon (shown next to the title)
+  badge: "/icons/badge-72.png",       // Monochrome icon for Android status bar
+  image: "/preview/message.jpg",      // Large preview image (Chrome Android only)
+  tag: "chat-123",                    // Replaces any notification with the same tag
+  url: "/chat/123",                   // Where to go when the notification is clicked
+  actions: [
+    { action: "reply", title: "Reply", icon: "/icons/reply.png" },
+    { action: "mark-read", title: "Mark as read" },
+  ],
+  data: { messageId: 456, userId: "alice" },
+});
+```
+
+### Default icon / badge at the SW level
+
+If you don't want every sender to repeat the same icon, set defaults at SW registration:
+
+```ts
+// src/app/sw.ts (or public/sw.js — use --default-icon with the CLI)
+import { registerAll } from "@piro0919/next-push/sw";
+
+registerAll({
+  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  defaultNotification: {
+    icon: "/icons/icon-192.png",
+    badge: "/icons/badge-72.png",
+  },
+});
+```
+
+The CLI can inline defaults into the generated `public/sw.js`:
+
+```bash
+npx next-push init --default-icon /icons/icon-192.png --default-badge /icons/badge-72.png
+```
+
+### Batch sending
+
+Send the same payload to many subscriptions with bounded concurrency:
+
+```ts
+import { sendPushBatch } from "@piro0919/next-push/server";
+import { prisma } from "@/lib/prisma";
+
+const subs = await prisma.pushSubscription.findMany();
+const result = await sendPushBatch(subs, {
+  title: "Daily digest",
+  body: "You have 3 new messages.",
+}, {
+  concurrency: 20,
+  onProgress: (done, total) => console.log(`${done}/${total}`),
+});
+
+// Prune dead subscriptions
+await prisma.pushSubscription.deleteMany({
+  where: { endpoint: { in: result.goneEndpoints } },
+});
+
+console.log(`${result.sent}/${result.total} delivered, ${result.failed} failures`);
+```
+
+### Handling retryable failures
+
+`sendPush` flags transient failures so you can retry with backoff:
+
+```ts
+const result = await sendPush(subscription, payload);
+
+if (result.ok) return; // delivered
+if (result.gone) {
+  await db.subscription.delete({ where: { endpoint: subscription.endpoint } });
+  return;
+}
+if (result.retryable) {
+  const delay = (result.retryAfter ?? 60) * 1000;
+  setTimeout(() => sendPush(subscription, payload), delay);
+  return;
+}
+// Permanent failure — log and investigate
+console.error("Push failed permanently", result.statusCode, result.error);
+```
+
 ## Supported environments
 
 | | |
