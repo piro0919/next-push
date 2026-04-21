@@ -3,7 +3,9 @@ import { createSerwistRoute } from "@serwist/turbopack";
 import type { NextRequest } from "next/server";
 
 const revision =
-  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout ?? crypto.randomUUID();
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ||
+  crypto.randomUUID();
 
 const serwistRoute = createSerwistRoute({
   additionalPrecacheEntries: [{ url: "/", revision }],
