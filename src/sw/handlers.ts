@@ -9,7 +9,18 @@ type NotificationSpec = NotificationOptions & {
 
 type PushHandler = (payload: unknown) => NotificationSpec;
 
-export function handlePush(event: PushEvent, handler?: PushHandler): void {
+export interface DefaultNotification {
+  icon?: string;
+  badge?: string;
+  image?: string;
+  tag?: string;
+}
+
+export function handlePush(
+  event: PushEvent,
+  handler?: PushHandler,
+  defaults?: DefaultNotification,
+): void {
   let payload: unknown;
   try {
     payload = event.data ? event.data.json() : null;
@@ -23,10 +34,10 @@ export function handlePush(event: PushEvent, handler?: PushHandler): void {
       spec = handler(payload);
     } catch (e) {
       console.error("[next-push] handlePush: custom handler threw, falling back to default:", e);
-      spec = defaultNotificationSpec(payload as PushPayload | null);
+      spec = defaultNotificationSpec(payload as PushPayload | null, defaults);
     }
   } else {
-    spec = defaultNotificationSpec(payload as PushPayload | null);
+    spec = defaultNotificationSpec(payload as PushPayload | null, defaults);
   }
 
   const { title, ...options } = spec;
@@ -34,14 +45,17 @@ export function handlePush(event: PushEvent, handler?: PushHandler): void {
   event.waitUntil(reg.showNotification(title, options));
 }
 
-function defaultNotificationSpec(p: PushPayload | null): NotificationSpec {
+function defaultNotificationSpec(
+  p: PushPayload | null,
+  defaults?: DefaultNotification,
+): NotificationSpec {
   return {
     title: p?.title ?? "Notification",
     body: p?.body,
-    icon: p?.icon,
-    badge: p?.badge,
-    image: p?.image,
-    tag: p?.tag,
+    icon: p?.icon ?? defaults?.icon,
+    badge: p?.badge ?? defaults?.badge,
+    image: p?.image ?? defaults?.image,
+    tag: p?.tag ?? defaults?.tag,
     data: { url: p?.url ?? "/", raw: p?.data },
     actions: p?.actions,
   };

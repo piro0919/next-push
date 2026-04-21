@@ -1,4 +1,4 @@
-import { handleClick, handleClose, handlePush } from "./handlers";
+import { type DefaultNotification, handleClick, handleClose, handlePush } from "./handlers";
 import { handleSubscriptionChange } from "./subscriptionChange";
 
 export interface RegisterAllOptions {
@@ -7,11 +7,14 @@ export interface RegisterAllOptions {
   onPush?: (payload: unknown) => NotificationOptions & { title: string };
   onClick?: (data: unknown, notification: Notification) => string | null;
   onClose?: (notification: Notification) => void | Promise<void>;
+  defaultNotification?: DefaultNotification;
 }
 
 export function registerAll(options: RegisterAllOptions): void {
   const sw = self as unknown as ServiceWorkerGlobalScope;
-  sw.addEventListener("push", (event) => handlePush(event as PushEvent, options.onPush));
+  sw.addEventListener("push", (event) =>
+    handlePush(event as PushEvent, options.onPush, options.defaultNotification),
+  );
   sw.addEventListener("notificationclick", (event) =>
     handleClick(event as NotificationEvent, options.onClick),
   );

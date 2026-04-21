@@ -57,6 +57,49 @@ describe("handlePush", () => {
 
     expect(showNotification).toHaveBeenCalledWith("Notification", expect.any(Object));
   });
+
+  it("uses defaultNotification fallback when payload is missing fields", () => {
+    const showNotification = vi.fn();
+    (globalThis as unknown as { self: unknown }).self = {
+      registration: { showNotification },
+    };
+    const event = {
+      data: { json: () => ({ title: "hi", body: "there" }) },
+      waitUntil: vi.fn(),
+    } as unknown as PushEvent;
+
+    handlePush(event, undefined, {
+      icon: "/default-icon.png",
+      badge: "/default-badge.png",
+    });
+
+    expect(showNotification).toHaveBeenCalledWith(
+      "hi",
+      expect.objectContaining({
+        body: "there",
+        icon: "/default-icon.png",
+        badge: "/default-badge.png",
+      }),
+    );
+  });
+
+  it("payload icon wins over defaultNotification", () => {
+    const showNotification = vi.fn();
+    (globalThis as unknown as { self: unknown }).self = {
+      registration: { showNotification },
+    };
+    const event = {
+      data: { json: () => ({ title: "hi", icon: "/payload-icon.png" }) },
+      waitUntil: vi.fn(),
+    } as unknown as PushEvent;
+
+    handlePush(event, undefined, { icon: "/default-icon.png" });
+
+    expect(showNotification).toHaveBeenCalledWith(
+      "hi",
+      expect.objectContaining({ icon: "/payload-icon.png" }),
+    );
+  });
 });
 
 describe("handlePush custom handler error fallback", () => {
