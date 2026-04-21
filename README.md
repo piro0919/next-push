@@ -94,6 +94,11 @@ See `@piro0919/next-push/sw`. `registerAll({ vapidPublicKey })` wires up `push`,
 
 ## Recipes
 
+Deeper guides for Vercel Marketplace-provisioned storage:
+
+- [Upstash Redis](./docs/recipes/upstash-redis.md) — minimal-ops hash-based store, per-user indexing via sets
+- [Neon Postgres](./docs/recipes/neon-postgres.md) — relational store with Neon's serverless HTTP driver
+
 ### Prisma
 
 ```prisma

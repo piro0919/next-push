@@ -8,6 +8,9 @@ before 1.0 may land in minor releases.
 
 ### Added
 
+- Persistence recipes in `docs/recipes/` — Upstash Redis and Neon Postgres,
+  both via the Vercel Marketplace, with broadcast, per-user indexing, and
+  gone-subscription pruning patterns.
 - Demo site gains a customizable notification payload form — title, body, icon,
   image, tag, and click URL — with six bundled SVG presets (3 icons, 3 banner
   images) so the flow works offline. `PUT /api/push` accepts the full
