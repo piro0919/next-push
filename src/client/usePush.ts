@@ -21,6 +21,11 @@ export interface UsePushReturn {
 
 let swRegistrationPromise: Promise<ServiceWorkerRegistration> | null = null;
 
+/** @internal — resets the cached SW registration promise (for testing only) */
+export function _resetSwRegistration(): void {
+  swRegistrationPromise = null;
+}
+
 function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
   if (swRegistrationPromise) return swRegistrationPromise;
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
@@ -79,15 +84,19 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
 
     setPermission(Notification.permission);
 
+    let ignore = false;
     void (async () => {
       try {
         const reg = await getOrRegisterSW(swPath);
         const sub = await reg.pushManager.getSubscription();
-        if (sub) setSubscription(sub.toJSON() as PushSubscriptionJSON);
+        if (!ignore && sub) setSubscription(sub.toJSON() as PushSubscriptionJSON);
       } catch (e) {
-        setError(e instanceof Error ? e : new Error(String(e)));
+        if (!ignore) setError(e instanceof Error ? e : new Error(String(e)));
       }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [swPath]);
 
   const subscribe = useCallback(async (): Promise<PushSubscriptionJSON> => {
@@ -110,12 +119,18 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
         applicationServerKey: base64UrlDecode(vapidPublicKey).buffer as ArrayBuffer,
       });
       const subJson = sub.toJSON() as PushSubscriptionJSON;
-      const res = await fetch(apiPath, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(subJson),
-      });
-      if (!res.ok) throw new Error(`Subscribe POST failed: ${res.status}`);
+      try {
+        const res = await fetch(apiPath, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(subJson),
+        });
+        if (!res.ok) throw new Error(`Subscribe POST failed: ${res.status}`);
+      } catch (e) {
+        // Roll back the browser-side subscription so the user can retry cleanly
+        await sub.unsubscribe().catch(() => {});
+        throw e;
+      }
       setSubscription(subJson);
       return subJson;
     } catch (e) {

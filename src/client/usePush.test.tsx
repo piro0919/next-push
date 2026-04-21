@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { usePush } from "./usePush";
+import { _resetSwRegistration, usePush } from "./usePush";
 
 describe("usePush", () => {
   const originalNav = globalThis.navigator;
@@ -38,6 +38,7 @@ describe("usePush", () => {
   });
 
   afterEach(() => {
+    _resetSwRegistration();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: originalNav,
@@ -75,6 +76,49 @@ describe("usePush", () => {
       endpoint: "https://ep",
       keys: { p256dh: "p", auth: "a" },
     });
+  });
+
+  it("calls sub.unsubscribe() and rejects when POST returns 500", async () => {
+    const unsubscribeMock = vi.fn().mockResolvedValue(true);
+    const subscribeMock = vi.fn().mockResolvedValue({
+      toJSON: () => ({
+        endpoint: "https://ep",
+        keys: { p256dh: "p", auth: "a" },
+      }),
+      unsubscribe: unsubscribeMock,
+    });
+    // Override navigator to use this specific subscribe mock
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue(null),
+        subscribe: subscribeMock,
+      },
+    };
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: {
+        serviceWorker: {
+          register: vi.fn().mockResolvedValue(registration),
+          ready: Promise.resolve(registration),
+        },
+      },
+    });
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+
+    const { result } = renderHook(() =>
+      usePush({
+        vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789",
+      }),
+    );
+    await waitFor(() => expect(result.current.isSupported).toBe(true));
+
+    await expect(
+      act(async () => {
+        await result.current.subscribe();
+      }),
+    ).rejects.toThrow(/500/);
+
+    expect(unsubscribeMock).toHaveBeenCalledOnce();
   });
 
   it("exposes error when vapidPublicKey is missing", async () => {
