@@ -4,6 +4,18 @@ import { fileURLToPath } from "node:url";
 import { generateVAPIDKeys } from "../../server/vapid/keys";
 import { PAGE_TSX, ROUTE_TS, SEND_EXAMPLE_TS } from "../templates";
 
+/** Returns "src/app" if that directory exists, otherwise "app". */
+function appDir(cwd: string): string {
+  return existsSync(join(cwd, "src/app")) ? "src/app" : "app";
+}
+
+/** Inlines the VAPID public key and api path into the sw.js template. */
+function inlineVapidKey(template: string, vapidPublicKey: string, apiPath = "/api/push"): string {
+  return template
+    .replace(/self\.__NEXT_PUSH_VAPID_PUBLIC_KEY__/g, JSON.stringify(vapidPublicKey))
+    .replace(/self\.__NEXT_PUSH_API_PATH__ \?\? "[^"]*"/g, JSON.stringify(apiPath));
+}
+
 export interface InitOptions {
   cwd?: string;
   sendOnly?: boolean;
@@ -28,6 +40,27 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
   let serwistDetected = false;
   let swConflict = false;
 
+  // 2. .env.local — read first so we know which keys need generating
+  const envPath = join(cwd, ".env.local");
+  const envExisting = existsSync(envPath) ? readFileSync(envPath, "utf8") : "";
+  const needPub = mode !== "send" && !envExisting.includes("NEXT_PUBLIC_VAPID_PUBLIC_KEY=");
+  const needPriv = mode !== "receive" && !envExisting.includes("VAPID_PRIVATE_KEY=");
+  const needSubject = mode !== "receive" && !envExisting.includes("VAPID_SUBJECT=");
+
+  let publicKey = "";
+  let privateKey = "";
+  if (needPub || needPriv) {
+    const keys = await generateVAPIDKeys();
+    publicKey = keys.publicKey;
+    privateKey = keys.privateKey;
+  }
+
+  // Determine the final public key to inline (either just generated or already in .env.local)
+  if (!publicKey) {
+    const existing = envExisting.match(/NEXT_PUBLIC_VAPID_PUBLIC_KEY=(.+)/);
+    publicKey = existing?.[1]?.trim() ?? "";
+  }
+
   // 1. SW handling (skipped in send-only)
   if (mode !== "send" && !opts.skipSw) {
     const swTsPath = join(cwd, "src/app/sw.ts");
@@ -47,28 +80,25 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
       console.log("    --sw-addon        create public/next-push-sw.js and importScripts it");
       console.log("    --skip-sw         skip SW generation");
     } else if (opts.swAddon && existsSync(swJsPath)) {
-      writeFile(cwd, "public/next-push-sw.js", loadTemplateSwJs(), generated, skipped, opts.force);
+      const swContent = publicKey
+        ? inlineVapidKey(loadTemplateSwJs(), publicKey)
+        : loadTemplateSwJs();
+      writeFile(cwd, "public/next-push-sw.js", swContent, generated, skipped, opts.force);
       console.log("    Add this line to your public/sw.js:");
       console.log(`      importScripts("/next-push-sw.js");`);
     } else {
-      writeFile(cwd, "public/sw.js", loadTemplateSwJs(), generated, skipped, opts.force);
+      const swContent = publicKey
+        ? inlineVapidKey(loadTemplateSwJs(), publicKey)
+        : loadTemplateSwJs();
+      writeFile(cwd, "public/sw.js", swContent, generated, skipped, opts.force);
     }
   }
 
-  // 2. .env.local
-  const { publicKey, privateKey } = await generateVAPIDKeys();
-  const envPath = join(cwd, ".env.local");
-  const envExisting = existsSync(envPath) ? readFileSync(envPath, "utf8") : "";
+  // .env.local — write newly needed keys
   const envLines: string[] = [];
-  if (mode !== "send" && !envExisting.includes("NEXT_PUBLIC_VAPID_PUBLIC_KEY=")) {
-    envLines.push(`NEXT_PUBLIC_VAPID_PUBLIC_KEY=${publicKey}`);
-  }
-  if (mode !== "receive" && !envExisting.includes("VAPID_PRIVATE_KEY=")) {
-    envLines.push(`VAPID_PRIVATE_KEY=${privateKey}`);
-  }
-  if (mode !== "receive" && !envExisting.includes("VAPID_SUBJECT=")) {
-    envLines.push(`VAPID_SUBJECT=mailto:you@example.com`);
-  }
+  if (needPub) envLines.push(`NEXT_PUBLIC_VAPID_PUBLIC_KEY=${publicKey}`);
+  if (needPriv) envLines.push(`VAPID_PRIVATE_KEY=${privateKey}`);
+  if (needSubject) envLines.push(`VAPID_SUBJECT=mailto:you@example.com`);
   if (envLines.length > 0) {
     const sep = envExisting && !envExisting.endsWith("\n") ? "\n" : "";
     writeFileSync(envPath, `${envExisting + sep + envLines.join("\n")}\n`);
@@ -77,8 +107,9 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
 
   // 3. Client-side scaffolding (skipped in send-only)
   if (mode !== "send") {
-    writeFile(cwd, "app/api/push/route.ts", ROUTE_TS, generated, skipped, opts.force);
-    writeFile(cwd, "app/push-demo/page.tsx", PAGE_TSX, generated, skipped, opts.force);
+    const dir = appDir(cwd);
+    writeFile(cwd, `${dir}/api/push/route.ts`, ROUTE_TS, generated, skipped, opts.force);
+    writeFile(cwd, `${dir}/push-demo/page.tsx`, PAGE_TSX, generated, skipped, opts.force);
   }
 
   // 4. Server-side scaffolding (skipped in receive-only)

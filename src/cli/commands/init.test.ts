@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as vapidKeysModule from "../../server/vapid/keys";
 import { runInit } from "./init";
 
 describe("runInit", () => {
@@ -81,5 +82,38 @@ describe("runInit", () => {
     await runInit({ cwd: dir });
     const env = readFileSync(join(dir, ".env.local"), "utf8");
     expect(env).toMatch(/VAPID_PRIVATE_KEY=EXISTING/);
+  });
+
+  it("detects src/app layout and creates files under src/app/", async () => {
+    mkdirSync(join(dir, "src/app"), { recursive: true });
+    await runInit({ cwd: dir });
+    expect(existsSync(join(dir, "src/app/api/push/route.ts"))).toBe(true);
+    expect(existsSync(join(dir, "src/app/push-demo/page.tsx"))).toBe(true);
+    // flat app/ dir should NOT be created
+    expect(existsSync(join(dir, "app/api/push/route.ts"))).toBe(false);
+  });
+
+  it("does not regenerate VAPID keys when all three already present in .env.local", async () => {
+    writeFileSync(
+      join(dir, ".env.local"),
+      "NEXT_PUBLIC_VAPID_PUBLIC_KEY=PUBKEY\nVAPID_PRIVATE_KEY=PRIVKEY\nVAPID_SUBJECT=mailto:x@y.com\n",
+    );
+    const spy = vi.spyOn(vapidKeysModule, "generateVAPIDKeys");
+    await runInit({ cwd: dir });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("generates public/sw.js with inlined VAPID public key (not placeholder)", async () => {
+    await runInit({ cwd: dir });
+    const swContent = readFileSync(join(dir, "public/sw.js"), "utf8");
+    expect(swContent).not.toContain("self.__NEXT_PUSH_VAPID_PUBLIC_KEY__");
+    // Should contain the actual key value as a JSON string
+    const envContent = readFileSync(join(dir, ".env.local"), "utf8");
+    const match = envContent.match(/NEXT_PUBLIC_VAPID_PUBLIC_KEY=(.+)/);
+    const pubKey = match?.[1]?.trim();
+    if (pubKey) {
+      expect(swContent).toContain(JSON.stringify(pubKey));
+    }
   });
 });
