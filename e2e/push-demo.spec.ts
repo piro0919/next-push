@@ -41,7 +41,7 @@ async function runPushFlow(page: Page, apiCalls: ApiCall[]): Promise<void> {
     console.log("[page error]", err.message);
   });
 
-  await page.goto("http://localhost:3000/push-demo");
+  await page.goto("http://localhost:3000/");
   await expect(page.getByText(/Subscribed:/)).toContainText("no");
   await page.getByRole("button", { name: /^Subscribe$/ }).click();
   await expect(page.getByText(/Subscribed:/)).toContainText("yes", { timeout: 20_000 });
@@ -50,7 +50,7 @@ async function runPushFlow(page: Page, apiCalls: ApiCall[]): Promise<void> {
   expect(postCall, "POST /api/push should have been called").toBeTruthy();
   expect(postCall?.status).toBe(201);
 
-  await page.getByRole("button", { name: /^Send test$/ }).click();
+  await page.getByRole("button", { name: /^Send test notification$/ }).click();
   await expect.poll(() => apiCalls.some((c) => c.method === "PUT"), { timeout: 20_000 }).toBe(true);
   const putCall = apiCalls.find((c) => c.method === "PUT");
   expect(putCall?.status).toBe(200);

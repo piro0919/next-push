@@ -5,7 +5,7 @@ Web Push notifications for Next.js — client hooks, server sender, and Service 
 [![npm](https://img.shields.io/npm/v/@piro0919/next-push.svg)](https://www.npmjs.com/package/@piro0919/next-push)
 [![license](https://img.shields.io/npm/l/@piro0919/next-push.svg)](./LICENSE)
 
-**🔗 [Live Demo](https://next-push.kkweb.io/push-demo)** — subscribe in Chrome/Edge, press "Send test", get a real notification.
+**🔗 [Live Demo](https://next-push.kkweb.io/)** — subscribe in Chrome/Edge, press "Send test notification", get a real notification.
 
 ## Why
 
