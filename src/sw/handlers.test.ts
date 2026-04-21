@@ -59,8 +59,31 @@ describe("handlePush", () => {
   });
 });
 
+describe("handlePush custom handler error fallback", () => {
+  it("falls back to default notification spec when custom handler throws", () => {
+    const showNotification = vi.fn();
+    (globalThis as unknown as { self: unknown }).self = {
+      registration: { showNotification },
+    };
+    const event = {
+      data: { json: () => ({ title: "orig", body: "body", url: "/page" }) },
+      waitUntil: vi.fn(),
+    } as unknown as PushEvent;
+
+    handlePush(event, () => {
+      throw new Error("handler exploded");
+    });
+
+    // Should fall back to the default spec derived from the parsed payload
+    expect(showNotification).toHaveBeenCalledWith(
+      "orig",
+      expect.objectContaining({ body: "body" }),
+    );
+  });
+});
+
 describe("handleClick", () => {
-  it("opens a new window with url from notification data", async () => {
+  it("opens a new window with absolute url from notification data", async () => {
     const openWindow = vi.fn().mockResolvedValue(null);
     const matchAll = vi.fn().mockResolvedValue([]);
     (globalThis as unknown as { clients: unknown; self: unknown }).clients = {
@@ -80,7 +103,8 @@ describe("handleClick", () => {
     await handleClick(event);
 
     expect(close).toHaveBeenCalled();
-    expect(openWindow).toHaveBeenCalledWith("/chat/1");
+    // focusOrOpen should pass the absolute URL to openWindow
+    expect(openWindow).toHaveBeenCalledWith("http://localhost/chat/1");
   });
 
   it("focuses existing window if same url is open", async () => {

@@ -39,4 +39,18 @@ describe("handleSubscriptionChange", () => {
     });
     expect(globalThis.fetch).toHaveBeenCalledWith("/api/push", expect.any(Object));
   });
+
+  it("resolves without throwing when pushManager.subscribe throws, and does not call fetch", async () => {
+    subscribe.mockRejectedValue(new Error("subscribe failed"));
+
+    await expect(
+      handleSubscriptionChange({ waitUntil: (p: Promise<unknown>) => p } as unknown as Event, {
+        vapidPublicKey:
+          "q6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6urq6s",
+        apiPath: "/api/push",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
 });

@@ -17,7 +17,17 @@ export function handlePush(event: PushEvent, handler?: PushHandler): void {
     payload = { title: event.data?.text() ?? "Notification" };
   }
 
-  const spec = handler ? handler(payload) : defaultNotificationSpec(payload as PushPayload | null);
+  let spec: NotificationSpec;
+  if (handler) {
+    try {
+      spec = handler(payload);
+    } catch (e) {
+      console.error("[next-push] handlePush: custom handler threw, falling back to default:", e);
+      spec = defaultNotificationSpec(payload as PushPayload | null);
+    }
+  } else {
+    spec = defaultNotificationSpec(payload as PushPayload | null);
+  }
 
   const { title, ...options } = spec;
   const reg = (self as unknown as { registration: ServiceWorkerRegistration }).registration;
@@ -67,7 +77,7 @@ async function focusOrOpen(relativeUrl: string): Promise<void> {
       return;
     }
   }
-  await cls.openWindow(relativeUrl);
+  await cls.openWindow(absoluteUrl);
 }
 
 export function handleClose(
