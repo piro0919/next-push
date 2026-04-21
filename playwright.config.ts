@@ -13,6 +13,7 @@ export default defineConfig({
   projects: [
     {
       name: "chrome",
+      testIgnore: /webkit\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         channel: "chrome",
@@ -21,6 +22,7 @@ export default defineConfig({
     },
     {
       name: "firefox",
+      testIgnore: /webkit\.spec\.ts/,
       use: {
         ...devices["Desktop Firefox"],
         headless: true,
@@ -37,6 +39,19 @@ export default defineConfig({
             "dom.push.testing.ignorePermission": false,
           },
         },
+      },
+    },
+    {
+      // Playwright's bundled WebKit is NOT Safari — it lacks APNs integration,
+      // so Push subscription against a real push service will fail. We still
+      // exercise the SW registration + permission flow to catch regressions
+      // in the client-side code path that runs before subscribe() hits the
+      // push service. See webkit.spec.ts.
+      name: "webkit",
+      testMatch: /webkit\.spec\.ts/,
+      use: {
+        ...devices["Desktop Safari"],
+        headless: true,
       },
     },
   ],

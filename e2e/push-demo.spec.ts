@@ -50,7 +50,7 @@ async function runPushFlow(page: Page, apiCalls: ApiCall[]): Promise<void> {
   expect(postCall, "POST /api/push should have been called").toBeTruthy();
   expect(postCall?.status).toBe(201);
 
-  await page.getByRole("button", { name: /^Send test notification$/ }).click();
+  await page.getByRole("button", { name: /^Send notification$/ }).click();
   await expect.poll(() => apiCalls.some((c) => c.method === "PUT"), { timeout: 20_000 }).toBe(true);
   const putCall = apiCalls.find((c) => c.method === "PUT");
   expect(putCall?.status).toBe(200);
