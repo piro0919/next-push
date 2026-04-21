@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePush } from "../client";
 
 const QUICK_START_STEPS = [
@@ -31,17 +31,88 @@ await sendPush(subscription, {
   },
 ];
 
+const DEFAULT_FORM = {
+  title: "Test notification",
+  body: "Hello from next-push!",
+  icon: "/icon.svg",
+  image: "",
+  tag: "",
+  url: "",
+};
+
+const ICON_PRESETS = [
+  { label: "Brand", url: "/icon.svg" },
+  { label: "Bell", url: "/demo/icon-bell.svg" },
+  { label: "Chat", url: "/demo/icon-chat.svg" },
+  { label: "Star", url: "/demo/icon-star.svg" },
+];
+
+const IMAGE_PRESETS = [
+  { label: "None", url: "" },
+  { label: "Sunset", url: "/demo/image-sunset.svg" },
+  { label: "Ocean", url: "/demo/image-ocean.svg" },
+  { label: "Forest", url: "/demo/image-forest.svg" },
+];
+
+function InfoTip({ text }: { text: string }): React.ReactNode {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e: PointerEvent): void {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function handleKey(e: KeyboardEvent): void {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+  return (
+    <span className="group relative inline-flex" ref={wrapRef}>
+      {/* biome-ignore lint/a11y/useSemanticElements: a <button> would be auto-disabled by the surrounding <fieldset disabled> wrapper, blocking tap-to-open on mobile before subscribe */}
+      <span
+        aria-expanded={open}
+        aria-label={text}
+        className="inline-flex h-4 w-4 cursor-help select-none items-center justify-center rounded-full border border-[color:var(--border)] text-[10px] leading-none text-[color:var(--muted)] hover:bg-[color:var(--surface)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]"
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        i
+      </span>
+      <span
+        className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 w-max max-w-[240px] -translate-x-1/2 rounded-md bg-[color:var(--foreground)] px-2 py-1 text-[11px] text-[color:var(--background)] leading-snug shadow-lg group-hover:block ${open ? "block" : "hidden"}`}
+        role="tooltip"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
 export default function HomePage() {
   // Demo uses Serwist on Turbopack, which serves the SW at /serwist/sw.js
   // instead of the default /sw.js. swScope: "/" is required for Firefox.
   const push = usePush({ swPath: "/serwist/sw.js", swScope: "/" });
   const [sending, setSending] = useState(false);
+  const [form, setForm] = useState(DEFAULT_FORM);
 
   async function sendTest(): Promise<void> {
     setSending(true);
     try {
       await fetch("/api/push", {
-        body: JSON.stringify({ body: "Hello from next-push!", title: "Test notification" }),
+        body: JSON.stringify(form),
         method: "PUT",
       });
     } finally {
@@ -149,7 +220,7 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="mb-5 flex flex-wrap gap-3">
                 {push.subscription ? (
                   <button
                     className="cursor-pointer rounded-lg border border-[color:var(--border)] bg-[color:var(--background)] px-4 py-2 font-medium text-sm transition-colors hover:bg-[color:var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
@@ -168,15 +239,148 @@ export default function HomePage() {
                     {push.isSubscribing ? "Subscribing…" : "Subscribe"}
                   </button>
                 )}
-                <button
-                  className="cursor-pointer rounded-lg border border-[color:var(--border)] bg-[color:var(--background)] px-4 py-2 font-medium text-sm transition-colors hover:bg-[color:var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={!push.subscription || sending}
-                  onClick={sendTest}
-                  type="button"
-                >
-                  {sending ? "Sending…" : "Send test notification"}
-                </button>
               </div>
+
+              <fieldset
+                className="mb-5 rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-4"
+                disabled={!push.subscription}
+              >
+                <legend className="px-2 font-semibold text-sm">Notification payload</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Title
+                      <InfoTip text="Required. Main heading shown in bold at the top." />
+                    </span>
+                    <input
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="Test notification"
+                      type="text"
+                      value={form.title}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Body
+                      <InfoTip text="Optional detail text shown under the title." />
+                    </span>
+                    <textarea
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+                      placeholder="Hello from next-push!"
+                      rows={2}
+                      value={form.body}
+                    />
+                  </label>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Icon
+                      <InfoTip text="Small square image next to the title. Same-origin or https URL." />
+                    </span>
+                    <div className="mb-1.5 flex flex-wrap gap-1.5">
+                      {ICON_PRESETS.map((p) => (
+                        <button
+                          className={`cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            form.icon === p.url
+                              ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-[color:var(--brand-foreground)]"
+                              : "border-[color:var(--border)] bg-[color:var(--surface)] hover:bg-[color:var(--background)]"
+                          }`}
+                          key={p.url}
+                          onClick={() => setForm((f) => ({ ...f, icon: p.url }))}
+                          type="button"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+                      placeholder="/icon.svg or https://…"
+                      type="text"
+                      value={form.icon}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Image
+                      <InfoTip text="Large hero banner shown below the body. Chrome/Android only — ignored by Firefox and Safari." />
+                    </span>
+                    <div className="mb-1.5 flex flex-wrap gap-1.5">
+                      {IMAGE_PRESETS.map((p) => (
+                        <button
+                          className={`cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            form.image === p.url
+                              ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-[color:var(--brand-foreground)]"
+                              : "border-[color:var(--border)] bg-[color:var(--surface)] hover:bg-[color:var(--background)]"
+                          }`}
+                          key={p.label}
+                          onClick={() => setForm((f) => ({ ...f, image: p.url }))}
+                          type="button"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
+                      placeholder="https://… or blank"
+                      type="text"
+                      value={form.image}
+                    />
+                  </div>
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Tag
+                      <InfoTip text="Groups notifications. A new one with the same tag replaces the previous instead of stacking." />
+                    </span>
+                    <input
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, tag: e.target.value }))}
+                      placeholder="e.g. news"
+                      type="text"
+                      value={form.tag}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                      Click URL
+                      <InfoTip text="Where to navigate when the notification is clicked. Relative (/inbox) or absolute." />
+                    </span>
+                    <input
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm focus:border-[color:var(--brand)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                      placeholder="/inbox"
+                      type="text"
+                      value={form.url}
+                    />
+                  </label>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    className="cursor-pointer rounded-lg bg-[color:var(--brand)] px-4 py-2 font-medium text-[color:var(--brand-foreground)] text-sm transition-colors hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!push.subscription || sending}
+                    onClick={sendTest}
+                    type="button"
+                  >
+                    {sending ? "Sending…" : "Send notification"}
+                  </button>
+                  <button
+                    className="cursor-pointer rounded-lg border border-[color:var(--border)] bg-[color:var(--background)] px-4 py-2 font-medium text-sm transition-colors hover:bg-[color:var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => setForm(DEFAULT_FORM)}
+                    type="button"
+                  >
+                    Reset
+                  </button>
+                  {!push.subscription && (
+                    <span className="text-[color:var(--muted)] text-xs">
+                      Subscribe first to enable sending.
+                    </span>
+                  )}
+                </div>
+              </fieldset>
 
               {push.error && (
                 <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900 text-sm dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
