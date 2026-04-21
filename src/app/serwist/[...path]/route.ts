@@ -26,13 +26,23 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 export const revalidate = false;
 
+// Pre-generate the list of SW files at build time so Next.js can statically
+// serve them. The library returns this function via createSerwistRoute; it
+// produces one entry per bundled output file (sw.js, sw.js.map, etc.) with
+// `path` as a string. We convert to the `string[]` shape Next.js expects for
+// a catch-all route.
+export const generateStaticParams = async (): Promise<{ path: string[] }[]> => {
+  const params = await serwistRoute.generateStaticParams();
+  return params.map((p: { path: string }) => ({ path: p.path.split("/") }));
+};
+
 export const GET = async (
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) => {
   const { path } = await context.params;
   // Serwist's route handler expects `path` as a string; Next.js catch-all
-  // gives it as string[]. Join with OS separator since the handler uses path.join().
+  // gives it as string[]. Join with / since the handler uses path.join().
   const joined = Array.isArray(path) ? path.join("/") : path;
   return serwistRoute.GET(request, {
     params: Promise.resolve({ path: joined }),
