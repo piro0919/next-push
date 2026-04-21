@@ -6,7 +6,10 @@ export default function PushDemoPage() {
   // Demo uses Serwist on Turbopack, which serves the SW at /serwist/sw.js
   // instead of the default /sw.js. End users of the library who use the
   // `next-push init` template will get public/sw.js and can omit swPath.
-  const push = usePush({ swPath: "/serwist/sw.js" });
+  // swScope: "/" is required for Firefox — without it, Firefox restricts the SW
+  // to the /serwist/ scope and rejects pushManager calls from /push-demo.
+  // The server sends `Service-Worker-Allowed: /` to permit the wider scope.
+  const push = usePush({ swPath: "/serwist/sw.js", swScope: "/" });
   const [sending, setSending] = useState(false);
 
   async function sendTest() {

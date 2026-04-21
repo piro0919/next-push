@@ -7,6 +7,10 @@ export interface UsePushOptions {
   vapidPublicKey?: string;
   apiPath?: string;
   swPath?: string;
+  /** Override the Service Worker registration scope (e.g. "/" when the SW is
+   *  served from a sub-path like /serwist/sw.js). Requires the server to send
+   *  a `Service-Worker-Allowed: /` response header for the SW script. */
+  swScope?: string;
 }
 
 export interface UsePushReturn {
@@ -26,14 +30,16 @@ export function _resetSwRegistration(): void {
   swRegistrations.clear();
 }
 
-function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
-  const cached = swRegistrations.get(swPath);
+function getOrRegisterSW(swPath: string, swScope?: string): Promise<ServiceWorkerRegistration> {
+  const cacheKey = swScope ? `${swPath}|${swScope}` : swPath;
+  const cached = swRegistrations.get(cacheKey);
   if (cached) return cached;
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return Promise.reject(new Error("Service Worker not supported"));
   }
+  const registerOptions = swScope ? { scope: swScope } : undefined;
   const promise = navigator.serviceWorker
-    .register(swPath)
+    .register(swPath, registerOptions)
     .then((reg) => {
       // Wait for the SW to become active before returning, because
       // PushManager.subscribe() requires an active Service Worker.
@@ -57,10 +63,10 @@ function getOrRegisterSW(swPath: string): Promise<ServiceWorkerRegistration> {
       });
     })
     .catch((e) => {
-      swRegistrations.delete(swPath);
+      swRegistrations.delete(cacheKey);
       throw e;
     });
-  swRegistrations.set(swPath, promise);
+  swRegistrations.set(cacheKey, promise);
   return promise;
 }
 
@@ -70,6 +76,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : undefined);
   const apiPath = options.apiPath ?? "/api/push";
   const swPath = options.swPath ?? "/sw.js";
+  const swScope = options.swScope;
 
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
@@ -89,7 +96,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     let ignore = false;
     void (async () => {
       try {
-        const reg = await getOrRegisterSW(swPath);
+        const reg = await getOrRegisterSW(swPath, swScope);
         const sub = await reg.pushManager.getSubscription();
         if (!ignore && sub) setSubscription(sub.toJSON() as PushSubscriptionJSON);
       } catch (e) {
@@ -99,7 +106,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     return () => {
       ignore = true;
     };
-  }, [swPath]);
+  }, [swPath, swScope]);
 
   const subscribe = useCallback(async (): Promise<PushSubscriptionJSON> => {
     if (!vapidPublicKey) {
@@ -115,7 +122,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       const perm = await Notification.requestPermission();
       setPermission(perm);
       if (perm !== "granted") throw new Error(`Permission ${perm}`);
-      const reg = await getOrRegisterSW(swPath);
+      const reg = await getOrRegisterSW(swPath, swScope);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: base64UrlDecode(vapidPublicKey).buffer as ArrayBuffer,
@@ -142,12 +149,12 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     } finally {
       setIsSubscribing(false);
     }
-  }, [vapidPublicKey, apiPath, swPath]);
+  }, [vapidPublicKey, apiPath, swPath, swScope]);
 
   const unsubscribe = useCallback(async () => {
     setError(null);
     try {
-      const reg = await getOrRegisterSW(swPath);
+      const reg = await getOrRegisterSW(swPath, swScope);
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await sub.unsubscribe();
@@ -161,7 +168,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       setError(err);
       throw err;
     }
-  }, [apiPath, swPath]);
+  }, [apiPath, swPath, swScope]);
 
   return {
     isSupported,

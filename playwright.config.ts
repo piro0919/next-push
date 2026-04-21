@@ -12,17 +12,31 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
+      name: "chrome",
       use: {
         ...devices["Desktop Chrome"],
-        // Use installed Google Chrome — FCM push subscriptions require a Google-signed browser.
-        // If Chrome is not installed, change to channel: "chromium" and note it as a known limitation.
-        //
-        // NOTE: We do NOT use the standard Playwright context here because Chrome Push API does not
-        // work in ephemeral/incognito contexts (https://crbug.com/41124656). Instead, the test
-        // uses `chromium.launchPersistentContext()` directly with a temp user data dir.
         channel: "chrome",
         headless: true,
+      },
+    },
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        headless: true,
+        // Playwright's bundled Firefox ships with Push API disabled via
+        // playwright.cfg. Re-enable it here so we can exercise the real
+        // Mozilla autopush service. If this stops working in a future
+        // Playwright release, we may need to pin the Firefox version or
+        // switch to `channel: "firefox"` (real installed Firefox).
+        launchOptions: {
+          firefoxUserPrefs: {
+            "dom.push.enabled": true,
+            "dom.push.connection.enabled": true,
+            "dom.push.serverURL": "wss://push.services.mozilla.com/",
+            "dom.push.testing.ignorePermission": false,
+          },
+        },
       },
     },
   ],
