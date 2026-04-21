@@ -2,6 +2,11 @@
 
 Web Push notifications for Next.js — client hooks, server sender, and Service Worker helpers with full VAPID support.
 
+[![npm](https://img.shields.io/npm/v/@piro0919/next-push.svg)](https://www.npmjs.com/package/@piro0919/next-push)
+[![license](https://img.shields.io/npm/l/@piro0919/next-push.svg)](./LICENSE)
+
+**🔗 [Live Demo](https://next-push.kkweb.io/push-demo)** — subscribe in Chrome/Edge, press "Send test", get a real notification.
+
 ## Why
 
 - `web-push` is Node-only, weakly typed, and requires manual wiring into React and Next.js
