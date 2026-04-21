@@ -109,10 +109,11 @@ export default function HomePage() {
   const [form, setForm] = useState(DEFAULT_FORM);
 
   async function sendTest(): Promise<void> {
+    if (!push.subscription) return;
     setSending(true);
     try {
       await fetch("/api/push", {
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, endpoint: push.subscription.endpoint }),
         method: "PUT",
       });
     } finally {
