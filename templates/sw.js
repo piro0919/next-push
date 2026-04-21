@@ -12,8 +12,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload?.body,
-      icon: payload?.icon,
-      badge: payload?.badge,
+      icon: payload?.icon ?? self.__NEXT_PUSH_DEFAULT_ICON__,
+      badge: payload?.badge ?? self.__NEXT_PUSH_DEFAULT_BADGE__,
       image: payload?.image,
       tag: payload?.tag,
       data: { url: payload?.url ?? "/", raw: payload?.data },

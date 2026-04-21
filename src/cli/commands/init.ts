@@ -9,11 +9,29 @@ function appDir(cwd: string): string {
   return existsSync(join(cwd, "src/app")) ? "src/app" : "app";
 }
 
-/** Inlines the VAPID public key and api path into the sw.js template. */
-function inlineVapidKey(template: string, vapidPublicKey: string, apiPath = "/api/push"): string {
-  return template
-    .replace(/self\.__NEXT_PUSH_VAPID_PUBLIC_KEY__/g, JSON.stringify(vapidPublicKey))
+/** Inlines VAPID public key, api path, and optional default icon/badge into the sw.js template. */
+function inlineSwTemplate(
+  template: string,
+  opts: {
+    vapidPublicKey: string;
+    apiPath?: string;
+    defaultIcon?: string;
+    defaultBadge?: string;
+  },
+): string {
+  const apiPath = opts.apiPath ?? "/api/push";
+  let out = template
+    .replace(/self\.__NEXT_PUSH_VAPID_PUBLIC_KEY__/g, JSON.stringify(opts.vapidPublicKey))
     .replace(/self\.__NEXT_PUSH_API_PATH__ \?\? "[^"]*"/g, JSON.stringify(apiPath));
+  out = out.replace(
+    /self\.__NEXT_PUSH_DEFAULT_ICON__/g,
+    opts.defaultIcon ? JSON.stringify(opts.defaultIcon) : "undefined",
+  );
+  out = out.replace(
+    /self\.__NEXT_PUSH_DEFAULT_BADGE__/g,
+    opts.defaultBadge ? JSON.stringify(opts.defaultBadge) : "undefined",
+  );
+  return out;
 }
 
 export interface InitOptions {
@@ -23,6 +41,8 @@ export interface InitOptions {
   force?: boolean;
   swAddon?: boolean;
   skipSw?: boolean;
+  defaultIcon?: string;
+  defaultBadge?: string;
 }
 
 export interface InitResult {
@@ -81,14 +101,22 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
       console.log("    --skip-sw         skip SW generation");
     } else if (opts.swAddon && existsSync(swJsPath)) {
       const swContent = publicKey
-        ? inlineVapidKey(loadTemplateSwJs(), publicKey)
+        ? inlineSwTemplate(loadTemplateSwJs(), {
+            vapidPublicKey: publicKey,
+            defaultIcon: opts.defaultIcon,
+            defaultBadge: opts.defaultBadge,
+          })
         : loadTemplateSwJs();
       writeFile(cwd, "public/next-push-sw.js", swContent, generated, skipped, opts.force);
       console.log("    Add this line to your public/sw.js:");
       console.log(`      importScripts("/next-push-sw.js");`);
     } else {
       const swContent = publicKey
-        ? inlineVapidKey(loadTemplateSwJs(), publicKey)
+        ? inlineSwTemplate(loadTemplateSwJs(), {
+            vapidPublicKey: publicKey,
+            defaultIcon: opts.defaultIcon,
+            defaultBadge: opts.defaultBadge,
+          })
         : loadTemplateSwJs();
       writeFile(cwd, "public/sw.js", swContent, generated, skipped, opts.force);
     }

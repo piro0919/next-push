@@ -23,6 +23,11 @@ program
   .option("--force", "overwrite existing files")
   .option("--sw-addon", "generate public/next-push-sw.js and show importScripts recipe")
   .option("--skip-sw", "skip service worker file generation")
+  .option("--default-icon <path>", "path to default notification icon (e.g., /icons/icon-192.png)")
+  .option(
+    "--default-badge <path>",
+    "path to default notification badge (e.g., /icons/badge-72.png)",
+  )
   .action(
     async (opts: {
       sendOnly?: boolean;
@@ -30,6 +35,8 @@ program
       force?: boolean;
       swAddon?: boolean;
       skipSw?: boolean;
+      defaultIcon?: string;
+      defaultBadge?: string;
     }) => {
       await runInit(opts);
     },

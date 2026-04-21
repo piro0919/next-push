@@ -116,4 +116,26 @@ describe("runInit", () => {
       expect(swContent).toContain(JSON.stringify(pubKey));
     }
   });
+
+  it("--default-icon inlines icon path into public/sw.js", async () => {
+    await runInit({ cwd: dir, defaultIcon: "/icons/icon-192.png" });
+    const sw = readFileSync(join(dir, "public/sw.js"), "utf8");
+    expect(sw).toContain(`"/icons/icon-192.png"`);
+    expect(sw).not.toContain("__NEXT_PUSH_DEFAULT_ICON__");
+  });
+
+  it("--default-badge inlines badge path into public/sw.js", async () => {
+    await runInit({ cwd: dir, defaultBadge: "/icons/badge-72.png" });
+    const sw = readFileSync(join(dir, "public/sw.js"), "utf8");
+    expect(sw).toContain(`"/icons/badge-72.png"`);
+    expect(sw).not.toContain("__NEXT_PUSH_DEFAULT_BADGE__");
+  });
+
+  it("without default flags, placeholders become undefined", async () => {
+    await runInit({ cwd: dir });
+    const sw = readFileSync(join(dir, "public/sw.js"), "utf8");
+    expect(sw).not.toContain("__NEXT_PUSH_DEFAULT_ICON__");
+    expect(sw).not.toContain("__NEXT_PUSH_DEFAULT_BADGE__");
+    expect(sw).toMatch(/payload\?\.icon \?\? undefined/);
+  });
 });
