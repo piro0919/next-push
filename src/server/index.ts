@@ -13,4 +13,6 @@ export type {
 export { createPushHandler } from "./createPushHandler";
 export type { SendPushConfig } from "./sendPush";
 export { sendPush } from "./sendPush";
+export type { BatchSendOptions, BatchSendResult } from "./sendPushBatch";
+export { sendPushBatch } from "./sendPushBatch";
 export { generateVAPIDKeys } from "./vapid/keys";
