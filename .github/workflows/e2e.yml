@@ -1,0 +1,52 @@
+name: E2E (manual)
+
+# Runs the Playwright push flow against a fresh dev server.
+# Triggered manually because it hits real push services (FCM / Mozilla
+# autopush) and needs a VAPID keypair configured as repo secrets:
+#   - NEXT_PUBLIC_VAPID_PUBLIC_KEY
+#   - VAPID_PRIVATE_KEY
+#   - VAPID_SUBJECT  (e.g. "mailto:you@example.com")
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Playwright project
+        default: all
+        type: choice
+        options: [all, chrome, firefox, webkit]
+
+jobs:
+  e2e:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ inputs.project == 'all' && fromJSON('["chrome","firefox","webkit"]') || fromJSON(format('["{0}"]', inputs.project)) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps ${{ matrix.project == 'chrome' && 'chromium chrome' || matrix.project }}
+      - name: Run Playwright
+        run: pnpm exec playwright test --project=${{ matrix.project }}
+        env:
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.project }}-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
