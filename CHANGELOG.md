@@ -6,6 +6,14 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Added
+
+- `SendOptions` gains `onSuccess` / `onGone` / `onFailure` observability hooks
+  for both `sendPush` and `sendPushBatch`. Exactly one fires per subscription
+  based on the outcome; thrown errors and rejected promises from hooks are
+  swallowed and logged via `console.warn` so observability never breaks the
+  push flow. See the new Observability hooks recipe in the README.
+
 ### Security
 
 - Demo **Send notification** no longer broadcasts to every stored subscription.

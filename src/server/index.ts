@@ -1,6 +1,7 @@
 export type {
   PushPayload,
   PushSubscriptionJSON,
+  SendHooks,
   SendOptions,
   SendResult,
   Urgency,

@@ -248,4 +248,109 @@ describe("sendPush", () => {
       if (prevSub) process.env.VAPID_SUBJECT = prevSub;
     }
   });
+
+  describe("observability hooks", () => {
+    const sub = () => ({
+      endpoint: "https://fcm.googleapis.com/fcm/send/abc",
+      keys: subscriberKeys,
+    });
+
+    it("fires onSuccess with subscription and statusCode on 2xx", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+      const onSuccess = vi.fn();
+      const onGone = vi.fn();
+      const onFailure = vi.fn();
+      const s = sub();
+      await sendPush(
+        s,
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c", onSuccess, onGone, onFailure },
+      );
+      expect(onSuccess).toHaveBeenCalledWith(s, 201);
+      expect(onGone).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
+    });
+
+    it("fires onGone on 404/410 with the status code", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 410 }));
+      const onGone = vi.fn();
+      const onSuccess = vi.fn();
+      const onFailure = vi.fn();
+      const s = sub();
+      await sendPush(
+        s,
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c", onSuccess, onGone, onFailure },
+      );
+      expect(onGone).toHaveBeenCalledWith(s, 410);
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
+    });
+
+    it("fires onFailure on 5xx with error, retryable=true, statusCode", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response("oops", { status: 503 }));
+      const onFailure = vi.fn();
+      const s = sub();
+      await sendPush(s, { title: "hi" }, { vapidKeys, subject: "mailto:a@b.c", onFailure });
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      const [subArg, errArg, metaArg] = onFailure.mock.calls[0];
+      expect(subArg).toBe(s);
+      expect(errArg).toBeInstanceOf(Error);
+      expect(metaArg).toMatchObject({ retryable: true, statusCode: 503 });
+    });
+
+    it("fires onFailure with retryAfter when Retry-After header is present on 429", async () => {
+      globalThis.fetch = vi
+        .fn()
+        .mockResolvedValue(new Response(null, { status: 429, headers: { "Retry-After": "30" } }));
+      const onFailure = vi.fn();
+      await sendPush(sub(), { title: "hi" }, { vapidKeys, subject: "mailto:a@b.c", onFailure });
+      const [, , meta] = onFailure.mock.calls[0];
+      expect(meta).toMatchObject({ retryable: true, retryAfter: 30, statusCode: 429 });
+    });
+
+    it("fires onFailure when fetch throws (network error)", async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("ECONNRESET"));
+      const onFailure = vi.fn();
+      await sendPush(sub(), { title: "hi" }, { vapidKeys, subject: "mailto:a@b.c", onFailure });
+      expect(onFailure).toHaveBeenCalledTimes(1);
+      const [, err, meta] = onFailure.mock.calls[0];
+      expect(err.message).toMatch(/ECONNRESET/);
+      expect(meta.retryable).toBe(true);
+    });
+
+    it("swallows thrown hook errors without affecting the returned SendResult", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const onSuccess = vi.fn(() => {
+        throw new Error("boom");
+      });
+      const result = await sendPush(
+        sub(),
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c", onSuccess },
+      );
+      expect(result.ok).toBe(true);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("swallows rejected async hook without blocking return", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const onSuccess = vi.fn(async () => {
+        throw new Error("async boom");
+      });
+      const result = await sendPush(
+        sub(),
+        { title: "hi" },
+        { vapidKeys, subject: "mailto:a@b.c", onSuccess },
+      );
+      expect(result.ok).toBe(true);
+      // allow the microtask queue to drain so the rejection is caught
+      await new Promise((r) => setTimeout(r, 0));
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
 });
