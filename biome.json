@@ -11,7 +11,10 @@
       "!.next",
       "!node_modules",
       "!public/sw.js",
-      "!pnpm-lock.yaml"
+      "!pnpm-lock.yaml",
+      "!.vercel",
+      "!test-results",
+      "!playwright-report"
     ],
     "ignoreUnknown": false
   },
