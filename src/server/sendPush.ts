@@ -84,17 +84,29 @@ export async function sendPush<T extends PushPayload = PushPayload>(
     if (res.status === 404 || res.status === 410) {
       return { ok: false, gone: true, statusCode: res.status };
     }
+    const isRetryable = res.status === 429 || (res.status >= 500 && res.status <= 599);
+    let retryAfter: number | undefined;
+    if (res.status === 429) {
+      const header = res.headers.get("Retry-After");
+      if (header) {
+        const seconds = Number.parseInt(header, 10);
+        if (Number.isFinite(seconds) && seconds > 0) retryAfter = seconds;
+      }
+    }
     return {
       ok: false,
       gone: false,
       statusCode: res.status,
       error: new Error(`Push service returned ${res.status}: ${await res.text().catch(() => "")}`),
+      retryable: isRetryable,
+      ...(retryAfter !== undefined ? { retryAfter } : {}),
     };
   } catch (e) {
     return {
       ok: false,
       gone: false,
       error: e instanceof Error ? e : new Error(String(e)),
+      retryable: true,
     };
   }
 }

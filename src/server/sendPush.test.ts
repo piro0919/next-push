@@ -166,6 +166,65 @@ describe("sendPush", () => {
     });
   });
 
+  it("marks 429 as retryable with retryAfter from Retry-After header", async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { "Retry-After": "42" } }));
+    const result = await sendPush(
+      { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: subscriberKeys },
+      { title: "hi" },
+      { vapidKeys, subject: "mailto:a@b.c" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok && !result.gone) {
+      expect(result.statusCode).toBe(429);
+      expect(result.retryable).toBe(true);
+      expect(result.retryAfter).toBe(42);
+    }
+  });
+
+  it("marks 5xx as retryable with no retryAfter", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response("boom", { status: 503 }));
+    const result = await sendPush(
+      { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: subscriberKeys },
+      { title: "hi" },
+      { vapidKeys, subject: "mailto:a@b.c" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok && !result.gone) {
+      expect(result.statusCode).toBe(503);
+      expect(result.retryable).toBe(true);
+      expect(result.retryAfter).toBeUndefined();
+    }
+  });
+
+  it("marks 4xx (non-gone) as not retryable", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response("bad", { status: 400 }));
+    const result = await sendPush(
+      { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: subscriberKeys },
+      { title: "hi" },
+      { vapidKeys, subject: "mailto:a@b.c" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok && !result.gone) {
+      expect(result.statusCode).toBe(400);
+      expect(result.retryable).toBe(false);
+    }
+  });
+
+  it("marks network errors as retryable", async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error("ECONNRESET"));
+    const result = await sendPush(
+      { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: subscriberKeys },
+      { title: "hi" },
+      { vapidKeys, subject: "mailto:a@b.c" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok && !result.gone) {
+      expect(result.retryable).toBe(true);
+    }
+  });
+
   it("returns error result when VAPID keys are missing", async () => {
     const prevPub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     const prevPriv = process.env.VAPID_PRIVATE_KEY;

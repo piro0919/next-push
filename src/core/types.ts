@@ -30,7 +30,16 @@ export interface SendOptions {
 export type SendResult =
   | { ok: true; statusCode: number }
   | { ok: false; gone: true; statusCode: 404 | 410 }
-  | { ok: false; gone: false; statusCode?: number; error: Error };
+  | {
+      ok: false;
+      gone: false;
+      statusCode?: number;
+      error: Error;
+      /** Retry-After header value in seconds (only for 429 responses with the header). */
+      retryAfter?: number;
+      /** Whether the failure is likely transient. True for 429 and 5xx and network errors. */
+      retryable?: boolean;
+    };
 
 export interface VAPIDKeys {
   publicKey: string;
