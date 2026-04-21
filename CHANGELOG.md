@@ -6,6 +6,14 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Security
+
+- Demo **Send notification** no longer broadcasts to every stored subscription.
+  The caller must include their own subscription endpoint in the PUT body, and
+  the server only sends to that single subscription. This prevents a visitor
+  from spamming notifications to other visitors who subscribed on the same
+  Vercel Function instance.
+
 ### Added
 
 - Persistence recipes in `docs/recipes/` — Upstash Redis and Neon Postgres,

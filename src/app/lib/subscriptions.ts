@@ -8,6 +8,9 @@ export function add(sub: PushSubscriptionJSON): void {
 export function remove(endpoint: string): void {
   store.delete(endpoint);
 }
+export function get(endpoint: string): PushSubscriptionJSON | undefined {
+  return store.get(endpoint);
+}
 export function all(): PushSubscriptionJSON[] {
   return [...store.values()];
 }
