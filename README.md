@@ -229,6 +229,40 @@ await prisma.pushSubscription.deleteMany({
 console.log(`${result.sent}/${result.total} delivered, ${result.failed} failures`);
 ```
 
+### Observability hooks
+
+Plug metrics, logging, and DB cleanup into every `sendPush` / `sendPushBatch`
+call without wrapping the call site. Exactly one of the three fires per
+subscription; thrown errors and rejected promises from hooks are swallowed
+(and logged to `console.warn`) so observability never breaks the push flow.
+
+```ts
+import { sendPushBatch } from "@piro0919/next-push/server";
+import { metrics, logger } from "@/lib/observability";
+import { prisma } from "@/lib/prisma";
+
+await sendPushBatch(subs, payload, {
+  concurrency: 20,
+  onSuccess: (sub, statusCode) => {
+    metrics.increment("push.success", { statusCode });
+  },
+  onGone: async (sub) => {
+    // Subscription is dead — clean up immediately.
+    await prisma.pushSubscription.delete({
+      where: { endpoint: sub.endpoint },
+    }).catch(() => {});
+  },
+  onFailure: (sub, error, { statusCode, retryable, retryAfter }) => {
+    logger.error("push failed", { endpoint: sub.endpoint, statusCode, retryable, retryAfter, error });
+    metrics.increment("push.failure", { statusCode, retryable });
+  },
+});
+```
+
+Hooks work identically on the single-call `sendPush`. For long-running
+bookkeeping you can return a Promise; it will be awaited in the background
+without blocking the return.
+
 ### Handling retryable failures
 
 `sendPush` flags transient failures so you can retry with backoff:

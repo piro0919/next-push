@@ -180,4 +180,38 @@ describe("sendPushBatch", () => {
     expect(result.results).toEqual([]);
     expect(result.goneEndpoints).toEqual([]);
   });
+
+  it("propagates onSuccess/onGone/onFailure hooks to each sendPush", async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
+      .mockResolvedValueOnce(new Response(null, { status: 410 }))
+      .mockResolvedValueOnce(new Response("boom", { status: 500 }));
+    const subs = await Promise.all([
+      makeSubscriber("https://fcm.googleapis.com/fcm/send/ok"),
+      makeSubscriber("https://fcm.googleapis.com/fcm/send/gone"),
+      makeSubscriber("https://fcm.googleapis.com/fcm/send/fail"),
+    ]);
+    const onSuccess = vi.fn();
+    const onGone = vi.fn();
+    const onFailure = vi.fn();
+    await sendPushBatch(
+      subs,
+      { title: "hi" },
+      {
+        vapidKeys,
+        subject: "mailto:a@b.c",
+        concurrency: 1,
+        onSuccess,
+        onGone,
+        onFailure,
+      },
+    );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onGone).toHaveBeenCalledTimes(1);
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    expect(onSuccess.mock.calls[0][0].endpoint).toBe("https://fcm.googleapis.com/fcm/send/ok");
+    expect(onGone.mock.calls[0][0].endpoint).toBe("https://fcm.googleapis.com/fcm/send/gone");
+    expect(onFailure.mock.calls[0][0].endpoint).toBe("https://fcm.googleapis.com/fcm/send/fail");
+  });
 });

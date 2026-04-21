@@ -15,6 +15,24 @@ export interface SendPushConfig {
   subject?: string;
 }
 
+// Fire an observability hook without letting it throw, block, or affect
+// the caller's SendResult. Sync throws and rejected promises are logged
+// as warnings.
+function fireHook<Args extends unknown[]>(
+  hook: ((...args: Args) => void | Promise<void>) | undefined,
+  args: Args,
+): void {
+  if (!hook) return;
+  try {
+    const maybe = hook(...args);
+    if (maybe instanceof Promise) {
+      maybe.catch((e) => console.warn("[next-push] hook rejected:", e));
+    }
+  } catch (e) {
+    console.warn("[next-push] hook threw:", e);
+  }
+}
+
 export async function sendPush<T extends PushPayload = PushPayload>(
   subscription: PushSubscriptionJSON,
   payload: T,
@@ -25,13 +43,11 @@ export async function sendPush<T extends PushPayload = PushPayload>(
   const subject = config.subject ?? process.env.VAPID_SUBJECT;
 
   if (!publicKey || !privateKey || !subject) {
-    return {
-      ok: false,
-      gone: false,
-      error: new Error(
-        "VAPID keys missing. Provide vapidKeys+subject or set NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT",
-      ),
-    };
+    const error = new Error(
+      "VAPID keys missing. Provide vapidKeys+subject or set NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT",
+    );
+    fireHook(config.onFailure, [subscription, error, { retryable: false }]);
+    return { ok: false, gone: false, error };
   }
 
   if (
@@ -41,13 +57,11 @@ export async function sendPush<T extends PushPayload = PushPayload>(
     !subscription.keys?.p256dh ||
     !subscription.keys?.auth
   ) {
-    return {
-      ok: false,
-      gone: false,
-      error: new Error(
-        "Invalid subscription: endpoint must be https:// and keys.p256dh/auth must be present",
-      ),
-    };
+    const error = new Error(
+      "Invalid subscription: endpoint must be https:// and keys.p256dh/auth must be present",
+    );
+    fireHook(config.onFailure, [subscription, error, { retryable: false }]);
+    return { ok: false, gone: false, error };
   }
 
   try {
@@ -79,9 +93,11 @@ export async function sendPush<T extends PushPayload = PushPayload>(
     });
 
     if (res.status >= 200 && res.status < 300) {
+      fireHook(config.onSuccess, [subscription, res.status]);
       return { ok: true, statusCode: res.status };
     }
     if (res.status === 404 || res.status === 410) {
+      fireHook(config.onGone, [subscription, res.status]);
       return { ok: false, gone: true, statusCode: res.status };
     }
     const isRetryable = res.status === 429 || (res.status >= 500 && res.status <= 599);
@@ -93,20 +109,29 @@ export async function sendPush<T extends PushPayload = PushPayload>(
         if (Number.isFinite(seconds) && seconds > 0) retryAfter = seconds;
       }
     }
+    const error = new Error(
+      `Push service returned ${res.status}: ${await res.text().catch(() => "")}`,
+    );
+    fireHook(config.onFailure, [
+      subscription,
+      error,
+      {
+        statusCode: res.status,
+        retryable: isRetryable,
+        ...(retryAfter !== undefined ? { retryAfter } : {}),
+      },
+    ]);
     return {
       ok: false,
       gone: false,
       statusCode: res.status,
-      error: new Error(`Push service returned ${res.status}: ${await res.text().catch(() => "")}`),
+      error,
       retryable: isRetryable,
       ...(retryAfter !== undefined ? { retryAfter } : {}),
     };
   } catch (e) {
-    return {
-      ok: false,
-      gone: false,
-      error: e instanceof Error ? e : new Error(String(e)),
-      retryable: true,
-    };
+    const error = e instanceof Error ? e : new Error(String(e));
+    fireHook(config.onFailure, [subscription, error, { retryable: true }]);
+    return { ok: false, gone: false, error, retryable: true };
   }
 }
