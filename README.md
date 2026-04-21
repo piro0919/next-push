@@ -11,7 +11,7 @@ Web Push notifications for Next.js — client hooks, server sender, and Service 
 ## Install
 
 ```bash
-pnpm add next-push
+pnpm add @piro0919/next-push
 npx next-push init
 ```
 
@@ -22,7 +22,7 @@ That's it — a working push demo is scaffolded at `/push-demo`.
 ```tsx
 // app/push-toggle/page.tsx
 "use client";
-import { usePush } from "next-push";
+import { usePush } from "@piro0919/next-push";
 
 export default function PushToggle() {
   const { subscription, subscribe, unsubscribe, permission } = usePush();
@@ -35,7 +35,7 @@ export default function PushToggle() {
 
 ```ts
 // app/api/push/route.ts
-import { createPushHandler } from "next-push/server";
+import { createPushHandler } from "@piro0919/next-push/server";
 import { saveSubscription, deleteSubscription } from "@/lib/db";
 
 export const { POST, DELETE } = createPushHandler({
@@ -46,7 +46,7 @@ export const { POST, DELETE } = createPushHandler({
 
 ```ts
 // wherever you want to send a push
-import { sendPush } from "next-push/server";
+import { sendPush } from "@piro0919/next-push/server";
 const result = await sendPush(subscription, { title: "Hello", body: "World" });
 if (!result.ok && result.gone) await deleteSubscription(subscription.endpoint);
 ```
@@ -85,7 +85,7 @@ Returns `{ POST, DELETE }` ready to re-export from `app/api/push/route.ts`.
 
 ### Service Worker helpers
 
-See `next-push/sw`. `registerAll({ vapidPublicKey })` wires up `push`, `notificationclick`, `notificationclose`, and `pushsubscriptionchange`.
+See `@piro0919/next-push/sw`. `registerAll({ vapidPublicKey })` wires up `push`, `notificationclick`, `notificationclose`, and `pushsubscriptionchange`.
 
 ## Recipes
 
@@ -104,7 +104,7 @@ model PushSubscription {
 
 ```ts
 // app/api/push/route.ts
-import { createPushHandler } from "next-push/server";
+import { createPushHandler } from "@piro0919/next-push/server";
 import { prisma } from "@/lib/prisma";
 
 export const { POST, DELETE } = createPushHandler({
@@ -139,7 +139,7 @@ iOS Safari only delivers push notifications when the site is installed as a PWA.
 ```tsx
 "use client";
 import { usePwa } from "use-pwa";
-import { usePush } from "next-push";
+import { usePush } from "@piro0919/next-push";
 
 export function NotifyButton() {
   const { isPwa } = usePwa();

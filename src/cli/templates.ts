@@ -1,4 +1,4 @@
-export const ROUTE_TS = `import { createPushHandler } from "next-push/server";
+export const ROUTE_TS = `import { createPushHandler } from "@piro0919/next-push/server";
 
 // TODO: replace with your DB of choice (Prisma, Drizzle, Redis, etc.)
 const subs = new Map<string, { endpoint: string; keys: { p256dh: string; auth: string } }>();
@@ -14,7 +14,7 @@ export const { POST, DELETE } = createPushHandler({
 `;
 
 export const PAGE_TSX = `"use client";
-import { usePush } from "next-push";
+import { usePush } from "@piro0919/next-push";
 
 export default function PushDemoPage() {
   const { isSupported, permission, subscription, subscribe, unsubscribe, error } = usePush();
@@ -38,7 +38,7 @@ export default function PushDemoPage() {
 }
 `;
 
-export const SEND_EXAMPLE_TS = `import { sendPush } from "next-push/server";
+export const SEND_EXAMPLE_TS = `import { sendPush } from "@piro0919/next-push/server";
 
 // Example: send a notification to a stored subscription.
 // Replace \`getStoredSubscription\` with your actual DB fetch.

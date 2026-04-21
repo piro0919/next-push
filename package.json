@@ -1,5 +1,5 @@
 {
-  "name": "next-push",
+  "name": "@piro0919/next-push",
   "version": "0.1.0",
   "description": "Web Push notifications for Next.js — client hooks, server sender, and Service Worker helpers with full VAPID support",
   "author": "piro0919",

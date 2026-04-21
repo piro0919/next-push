@@ -36,7 +36,7 @@ export async function runInit(opts: InitOptions = {}): Promise<InitResult> {
       serwistDetected = true;
       console.log("Warning: Serwist SW detected (src/app/sw.ts).");
       console.log("    Add this to your sw.ts:\n");
-      console.log(`    import { registerAll } from "next-push/sw";`);
+      console.log(`    import { registerAll } from "@piro0919/next-push/sw";`);
       console.log(
         `    registerAll({ vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY! });\n`,
       );

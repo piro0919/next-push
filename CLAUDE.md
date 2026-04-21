@@ -20,9 +20,9 @@ next-push is a Web Push notifications library for Next.js App Router apps. It pr
 
 ```
 src/
-├── client/                      → 'next-push' export (React hooks)
-├── server/                      → 'next-push/server' export (VAPID send, Route Handler)
-├── sw/                          → 'next-push/sw' export (SW helpers)
+├── client/                      → '@piro0919/next-push' export (React hooks)
+├── server/                      → '@piro0919/next-push/server' export (VAPID send, Route Handler)
+├── sw/                          → '@piro0919/next-push/sw' export (SW helpers)
 ├── core/                        → internal shared types and utilities
 ├── cli/                         → next-push CLI (init, keys:generate)
 └── app/                         → Next.js demo app
