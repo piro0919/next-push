@@ -6,6 +6,8 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-04-22
+
 ### Changed
 
 - `npx next-push init` now scaffolds a **cookie-backed** `app/api/push/route.ts`
