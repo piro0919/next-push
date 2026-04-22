@@ -78,6 +78,9 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      use-pwa:
+        specifier: ^3.0.1
+        version: 3.0.1(react@19.2.5)
       vitest:
         specifier: ^4.1.4
         version: 4.1.4(@types/node@25.6.0)(happy-dom@20.9.0)(vite@8.0.9(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1))
@@ -1832,6 +1835,11 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  use-pwa@3.0.1:
+    resolution: {integrity: sha512-u/j0NXxfDISIVQVYy4CyXhP1bWcpZg3NqdeyODjHaAOhT/OVyfnhXoYY8MWeOc3EvDZkEYWjgE8ejZF/nCP/ZA==}
+    peerDependencies:
+      react: '>=17.0.0'
+
   vite@8.0.9:
     resolution: {integrity: sha512-t7g7GVRpMXjNpa67HaVWI/8BWtdVIQPCL2WoozXXA7LBGEFK4AkkKkHx2hAQf5x1GZSlcmEDPkVLSGahxnEEZw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3402,6 +3410,10 @@ snapshots:
       browserslist: 4.28.1
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  use-pwa@3.0.1(react@19.2.5):
+    dependencies:
+      react: 19.2.5
 
   vite@8.0.9(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1):
     dependencies:

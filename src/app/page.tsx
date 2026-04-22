@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import usePwa from "use-pwa";
 import { usePush } from "../client";
 
 const QUICK_START_STEPS = [
@@ -113,6 +114,38 @@ type SendApiResult =
       retryAfter?: number;
     }
   | { ok: false; httpStatus: number; error: string };
+
+function PwaInstallBanner(): React.ReactNode {
+  const { canInstall, install, isInstalled } = usePwa();
+  const [choice, setChoice] = useState<"accepted" | "dismissed" | null>(null);
+  const [installing, setInstalling] = useState(false);
+  if (isInstalled || choice === "accepted") return null;
+  if (!canInstall) return null;
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-3 text-indigo-900 text-sm dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200">
+      <span>
+        Install this demo as an app for a better mobile push experience (iOS requires PWA install
+        for push to work).
+      </span>
+      <button
+        className="cursor-pointer rounded-md bg-indigo-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={installing}
+        onClick={async () => {
+          setInstalling(true);
+          try {
+            const result = await install();
+            if (result) setChoice(result.outcome);
+          } finally {
+            setInstalling(false);
+          }
+        }}
+        type="button"
+      >
+        {installing ? "Prompting…" : "Install"}
+      </button>
+    </div>
+  );
+}
 
 function SendResultBanner({ result }: { result: SendApiResult }): React.ReactNode {
   if (result.ok) {
@@ -265,6 +298,8 @@ export default function HomePage() {
           <h2 className="mb-4 font-semibold text-xl" id="demo-heading">
             Live demo
           </h2>
+
+          <PwaInstallBanner />
 
           {!push.isSupported ? (
             <p className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 text-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
