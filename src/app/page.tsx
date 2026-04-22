@@ -112,8 +112,10 @@ export default function HomePage() {
     if (!push.subscription) return;
     setSending(true);
     try {
+      // The demo API reads the caller's subscription from the cookie set
+      // during subscribe, so the body carries only the payload fields.
       await fetch("/api/push", {
-        body: JSON.stringify({ ...form, endpoint: push.subscription.endpoint }),
+        body: JSON.stringify(form),
         method: "PUT",
       });
     } finally {

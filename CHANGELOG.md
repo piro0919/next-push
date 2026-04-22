@@ -6,6 +6,17 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Fixed
+
+- Demo subscription state moved from an in-memory `Map` to an HTTP-only cookie
+  set on subscribe. The old store was scoped to a single Vercel Function
+  instance, so the second and subsequent Send presses could land on a cold
+  instance and return `subscription not found` (404). The cookie travels with
+  the client and works across instances.
+- Demo **Send** now reads the caller's subscription from the cookie, so no
+  server-side state is required. No change to the published library — the
+  `createPushHandler` / `sendPush` APIs are unchanged.
+
 ## [0.3.0] — 2026-04-22
 
 ### Added
