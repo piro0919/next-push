@@ -6,6 +6,18 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Changed
+
+- `npx next-push init` now scaffolds a **cookie-backed** `app/api/push/route.ts`
+  instead of an in-memory `Map`. The old default looked innocent but silently
+  broke on Vercel / serverless hosts — subscribing on one Function instance
+  and sending from another returned `subscription not found`. The cookie
+  rides with the client and always works. Comments point users at the DB
+  recipes (`docs/recipes/upstash-redis.md` / `neon-postgres.md`) for the
+  real-app case where sends happen outside a request context.
+- `send-example.ts` gains a short note explaining when to read the cookie vs.
+  fetch from a DB.
+
 ### Added
 
 - Demo wires in [`use-pwa`](https://github.com/piro0919/use-pwa) and shows an
