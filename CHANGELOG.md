@@ -6,6 +6,15 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Changed
+
+- README and `package.json` now explicitly state that the server is
+  framework-agnostic (runs on any runtime with `fetch` + `crypto.subtle` —
+  Vercel, Cloudflare Workers, Netlify, AWS Lambda, Deno, Bun, plain Node).
+  Added a **Non-Next.js usage** section with Hono / Cloudflare Workers /
+  Express adapter examples and broadened the keywords. The CLI scaffold
+  is still Next.js App Router only.
+
 ## [0.3.1] — 2026-04-22
 
 ### Changed
