@@ -101,22 +101,94 @@ function InfoTip({ text }: { text: string }): React.ReactNode {
   );
 }
 
+type SendApiResult =
+  | { ok: true; statusCode: number }
+  | { ok: false; gone: true; statusCode: 404 | 410 }
+  | {
+      ok: false;
+      gone: false;
+      statusCode?: number;
+      message: string;
+      retryable?: boolean;
+      retryAfter?: number;
+    }
+  | { ok: false; httpStatus: number; error: string };
+
+function SendResultBanner({ result }: { result: SendApiResult }): React.ReactNode {
+  if (result.ok) {
+    return (
+      <p className="mt-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-emerald-900 text-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+        <strong>Accepted</strong> by the push service (HTTP {result.statusCode}). The notification
+        should be on its way.
+      </p>
+    );
+  }
+  if ("gone" in result && result.gone) {
+    return (
+      <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 text-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+        <strong>Subscription expired</strong> (HTTP {result.statusCode}). Unsubscribe and subscribe
+        again to get a fresh endpoint.
+      </p>
+    );
+  }
+  if ("httpStatus" in result) {
+    const notSubscribed = result.httpStatus === 404;
+    return (
+      <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900 text-sm dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+        <strong>
+          {notSubscribed ? "Not subscribed" : `Request failed (HTTP ${result.httpStatus})`}
+        </strong>
+        : {result.error}
+      </p>
+    );
+  }
+  return (
+    <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900 text-sm dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+      <strong>
+        Send failed
+        {result.statusCode ? ` (HTTP ${result.statusCode})` : ""}
+      </strong>
+      : {result.message}
+      {result.retryable && (
+        <span className="ml-1 text-xs opacity-80">
+          — retryable{result.retryAfter ? ` in ${result.retryAfter}s` : ""}
+        </span>
+      )}
+    </p>
+  );
+}
+
 export default function HomePage() {
   // Demo uses Serwist on Turbopack, which serves the SW at /serwist/sw.js
   // instead of the default /sw.js. swScope: "/" is required for Firefox.
   const push = usePush({ swPath: "/serwist/sw.js", swScope: "/" });
   const [sending, setSending] = useState(false);
   const [form, setForm] = useState(DEFAULT_FORM);
+  const [lastResult, setLastResult] = useState<SendApiResult | null>(null);
 
   async function sendTest(): Promise<void> {
     if (!push.subscription) return;
     setSending(true);
+    setLastResult(null);
     try {
       // The demo API reads the caller's subscription from the cookie set
       // during subscribe, so the body carries only the payload fields.
-      await fetch("/api/push", {
+      const res = await fetch("/api/push", {
         body: JSON.stringify(form),
         method: "PUT",
+      });
+      const data = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!res.ok) {
+        const msg = (data && typeof data.error === "string" ? data.error : null) ?? res.statusText;
+        setLastResult({ ok: false, httpStatus: res.status, error: msg });
+      } else {
+        setLastResult(data as SendApiResult);
+      }
+    } catch (e) {
+      setLastResult({
+        ok: false,
+        httpStatus: 0,
+        error: e instanceof Error ? e.message : "network error",
       });
     } finally {
       setSending(false);
@@ -383,6 +455,7 @@ export default function HomePage() {
                     </span>
                   )}
                 </div>
+                {lastResult && <SendResultBanner result={lastResult} />}
               </fieldset>
 
               {push.error && (

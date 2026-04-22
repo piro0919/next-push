@@ -6,6 +6,13 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+### Added
+
+- Demo now surfaces the `SendResult` back to the UI — an inline status banner
+  under the Send button reports Accepted / Subscription expired / Send failed
+  (with HTTP status, message, and retryable hint) so testers can see when a
+  push was actually accepted by the push service vs. silently rejected.
+
 ### Fixed
 
 - Demo subscription state moved from an in-memory `Map` to an HTTP-only cookie

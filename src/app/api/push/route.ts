@@ -61,5 +61,20 @@ export async function PUT(req: Request): Promise<Response> {
   // urgency: "high" bypasses Android Doze / Adaptive Battery batching so the
   // demo notification arrives immediately instead of seconds later.
   const result = await sendPush(sub, payload, { urgency: "high" });
-  return Response.json({ sent: result.ok ? 1 : 0, results: [result] });
+  // Normalize the SendResult to a JSON-serializable shape (Error objects
+  // don't survive JSON.stringify, so we explicitly pick error.message).
+  if (result.ok) {
+    return Response.json({ ok: true, statusCode: result.statusCode });
+  }
+  if (result.gone) {
+    return Response.json({ ok: false, gone: true, statusCode: result.statusCode });
+  }
+  return Response.json({
+    ok: false,
+    gone: false,
+    statusCode: result.statusCode,
+    message: result.error.message,
+    retryable: result.retryable,
+    retryAfter: result.retryAfter,
+  });
 }
