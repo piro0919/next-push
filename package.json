@@ -1,7 +1,7 @@
 {
   "name": "@piro0919/next-push",
   "version": "0.3.1",
-  "description": "Web Push notifications for Next.js — client hooks, server sender, and Service Worker helpers with full VAPID support",
+  "description": "Web Push notifications library with VAPID support — framework-agnostic server (Node / Vercel / Cloudflare Workers / Deno / Bun), with React hooks, Service Worker helpers, and a Next.js App Router scaffold",
   "author": "piro0919",
   "license": "MIT",
   "repository": {
@@ -22,7 +22,16 @@
     "service-worker",
     "pwa",
     "react",
-    "hook"
+    "hook",
+    "cloudflare-workers",
+    "deno",
+    "bun",
+    "hono",
+    "remix",
+    "serverless",
+    "edge",
+    "fetch",
+    "framework-agnostic"
   ],
   "sideEffects": false,
   "type": "module",

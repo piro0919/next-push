@@ -1,17 +1,29 @@
 # next-push
 
-Web Push notifications for Next.js — client hooks, server sender, and Service Worker helpers with full VAPID support.
+Web Push notifications library with VAPID support — framework-agnostic server, React client hooks, and Service Worker helpers. Ships a Next.js App Router scaffold out of the box.
 
 [![npm](https://img.shields.io/npm/v/@piro0919/next-push.svg)](https://www.npmjs.com/package/@piro0919/next-push)
 [![license](https://img.shields.io/npm/l/@piro0919/next-push.svg)](./LICENSE)
 
 **🔗 [Live Demo](https://next-push.kkweb.io/)** — subscribe in Chrome/Edge, tweak the payload (title, body, icon, image, tag, click URL), hit **Send notification**, and get a real push.
 
+## Runs anywhere
+
+The server (`@piro0919/next-push/server`) is pure Fetch API — only `fetch` + `crypto.subtle` — so it runs on any modern runtime:
+
+- ✅ Vercel Functions / Next.js / Remix / SvelteKit
+- ✅ Cloudflare Workers & Pages
+- ✅ Netlify Functions, AWS Lambda (Node 18+)
+- ✅ Deno Deploy, Bun
+- ✅ Plain Node.js with Express / Hono / Fastify / etc.
+
+The CLI (`npx next-push init`) scaffolds a Next.js App Router setup. If you use another framework, skip the CLI and wire `createPushHandler` / `sendPush` yourself — see [Non-Next.js usage](#non-nextjs-usage).
+
 ## Why
 
-- `web-push` is Node-only, weakly typed, and requires manual wiring into React and Next.js
+- `web-push` is Node-only, weakly typed, and requires manual wiring into client / React / Service Worker
 - OneSignal and FCM are overkill for many apps and lock you into a vendor
-- This package does all three sides (client / server / SW) for Next.js App Router with TypeScript-first APIs
+- This package does all three sides (client / server / SW) with a framework-agnostic core and a TypeScript-first API — the Next.js App Router integration is a convenience layer on top, not a requirement
 
 ## Install
 
@@ -55,6 +67,75 @@ import { sendPush } from "@piro0919/next-push/server";
 const result = await sendPush(subscription, { title: "Hello", body: "World" });
 if (!result.ok && result.gone) await deleteSubscription(subscription.endpoint);
 ```
+
+## Non-Next.js usage
+
+`createPushHandler` accepts a Fetch `Request` and returns a `Response`, so any runtime with the Fetch API can use it with a thin adapter.
+
+### Hono
+
+```ts
+import { Hono } from "hono";
+import { createPushHandler, sendPush } from "@piro0919/next-push/server";
+
+const push = createPushHandler({
+  onSubscribe: async (sub) => { /* save to DB */ },
+  onUnsubscribe: async (endpoint) => { /* delete from DB */ },
+});
+
+const app = new Hono();
+app.post("/api/push", (c) => push.POST(c.req.raw));
+app.delete("/api/push", (c) => push.DELETE(c.req.raw));
+```
+
+### Cloudflare Workers
+
+```ts
+import { createPushHandler, sendPush } from "@piro0919/next-push/server";
+
+const push = createPushHandler({
+  onSubscribe: async (sub) => { /* KV / D1 write */ },
+  onUnsubscribe: async (endpoint) => { /* KV / D1 delete */ },
+});
+
+export default {
+  async fetch(req: Request): Promise<Response> {
+    const { pathname } = new URL(req.url);
+    if (pathname === "/api/push") {
+      if (req.method === "POST") return push.POST(req);
+      if (req.method === "DELETE") return push.DELETE(req);
+    }
+    return new Response("Not found", { status: 404 });
+  },
+};
+```
+
+### Express (Node 18+)
+
+```ts
+import express from "express";
+import { createPushHandler, sendPush } from "@piro0919/next-push/server";
+
+const push = createPushHandler({ onSubscribe: ..., onUnsubscribe: ... });
+const app = express();
+
+// Bridge Express req → Fetch Request via the Web Fetch API.
+async function toFetchRequest(req: express.Request): Promise<Request> {
+  const body = ["GET", "HEAD"].includes(req.method) ? undefined : JSON.stringify(req.body);
+  return new Request(`http://localhost${req.url}`, {
+    method: req.method,
+    headers: req.headers as HeadersInit,
+    body,
+  });
+}
+
+app.post("/api/push", express.json(), async (req, res) => {
+  const response = await push.POST(await toFetchRequest(req));
+  res.status(response.status).send(await response.text());
+});
+```
+
+The client (`usePush`) and Service Worker (`registerAll`) helpers are runtime-agnostic — they only touch browser APIs. React 18+ is the only hard requirement there.
 
 ## Partial Install
 
@@ -286,11 +367,19 @@ console.error("Push failed permanently", result.statusCode, result.error);
 
 ## Supported environments
 
+### Server / runtime
+
 | | |
 |---|---|
-| Next.js | 15+ (App Router only) |
-| React   | 18+ |
-| Node.js | 20+ |
+| Any runtime with `fetch` + `crypto.subtle` | ✓ (see [Runs anywhere](#runs-anywhere)) |
+| Node.js | 18+ |
+| Next.js (for the CLI scaffold) | 15+, App Router |
+| React (for `usePush`) | 18+ |
+
+### Browsers (client / SW)
+
+| | |
+|---|---|
 | Chrome / Edge / Firefox (desktop + Android) | Latest 2 versions |
 | Safari macOS | 16+ |
 | **Safari iOS** | **16.4+ and installed as a PWA only** |
