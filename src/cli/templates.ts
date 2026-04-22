@@ -1,14 +1,36 @@
 export const ROUTE_TS = `import { createPushHandler } from "@piro0919/next-push/server";
+import { cookies } from "next/headers";
 
-// TODO: replace with your DB of choice (Prisma, Drizzle, Redis, etc.)
-const subs = new Map<string, { endpoint: string; keys: { p256dh: string; auth: string } }>();
+// Demo-quality storage: stash the caller's subscription in an HTTP-only
+// cookie. Works out of the box on Vercel (no DB required) and lets you
+// send pushes back to the same browser that subscribed — great for
+// integration testing.
+//
+// For a real app — where you send to other users, broadcast, or trigger
+// pushes from a cron/job — replace these callbacks with a DB write keyed
+// by user ID. See the persistence recipes:
+//   https://github.com/piro0919/next-push/tree/main/docs/recipes
+//
+// WHY NOT JUST new Map()? An in-memory Map lives inside one Vercel Function
+// instance. Subscribing on instance A and sending on instance B returns
+// "subscription not found" — subtle but real. Cookies ride with the client
+// so it always works regardless of instance.
+const SUBSCRIPTION_COOKIE = "next-push-sub";
 
 export const { POST, DELETE } = createPushHandler({
   onSubscribe: async (sub) => {
-    subs.set(sub.endpoint, sub);
+    const jar = await cookies();
+    jar.set(SUBSCRIPTION_COOKIE, JSON.stringify(sub), {
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 180,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+    });
   },
-  onUnsubscribe: async (endpoint) => {
-    subs.delete(endpoint);
+  onUnsubscribe: async () => {
+    const jar = await cookies();
+    jar.delete(SUBSCRIPTION_COOKIE);
   },
 });
 `;
@@ -41,7 +63,15 @@ export default function PushDemoPage() {
 export const SEND_EXAMPLE_TS = `import { sendPush } from "@piro0919/next-push/server";
 
 // Example: send a notification to a stored subscription.
-// Replace \`getStoredSubscription\` with your actual DB fetch.
+//
+// The scaffolded route.ts stores the subscription in an HTTP-only cookie, so
+// for sends that happen inside a request handler for the same user, you can
+// read the cookie via \`cookies().get("next-push-sub")\`.
+//
+// For sends that happen OUTSIDE a request (cron jobs, admin broadcast, user
+// A notifying user B), you need a real database. Replace \`getStoredSubscription\`
+// with your DB fetch — see the persistence recipes for Upstash Redis / Neon
+// Postgres at https://github.com/piro0919/next-push/tree/main/docs/recipes
 export async function sendExample() {
   const subscription = await getStoredSubscription();
   if (!subscription) return;
