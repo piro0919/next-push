@@ -1,32 +1,54 @@
-import type { PushPayload } from "../../../core/types";
+import { cookies } from "next/headers";
+import type { PushPayload, PushSubscriptionJSON } from "../../../core/types";
 import { createPushHandler, sendPush } from "../../../server";
-import { add, get, remove } from "../../lib/subscriptions";
+
+// The demo only sends push notifications back to the caller themselves, so
+// we don't need a server-side database at all. We stash the caller's
+// subscription in an HTTP-only cookie on subscribe and read it back on send.
+//
+// In a real app you would instead store subscriptions in a DB keyed by user
+// ID (see docs/recipes/upstash-redis.md or docs/recipes/neon-postgres.md)
+// and fetch the target user's subscription by that ID.
+const SUBSCRIPTION_COOKIE = "next-push-demo-sub";
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: true,
+  path: "/",
+  // Match the typical Web Push subscription expiration horizon (~6 months).
+  maxAge: 60 * 60 * 24 * 180,
+};
 
 export const { POST, DELETE } = createPushHandler({
-  onSubscribe: (sub) => add(sub),
-  onUnsubscribe: (endpoint) => remove(endpoint),
+  onSubscribe: async (sub) => {
+    const jar = await cookies();
+    jar.set(SUBSCRIPTION_COOKIE, JSON.stringify(sub), COOKIE_OPTIONS);
+  },
+  onUnsubscribe: async () => {
+    const jar = await cookies();
+    jar.delete(SUBSCRIPTION_COOKIE);
+  },
 });
 
-// Demo-only trigger: sends a push to the caller's own subscription only.
-// The caller must include their subscription endpoint in the request body;
-// we never broadcast to other visitors' subscriptions.
+// Demo send endpoint: reads the caller's subscription from the cookie and
+// sends to that subscription only. No server-side state is kept.
 // Guarded in production to prevent unauthorized use of the demo endpoint.
-// Set NEXT_PUSH_DEMO_ALLOW_PUT=1 on Vercel to re-enable for the public demo.
 export async function PUT(req: Request): Promise<Response> {
   if (process.env.NODE_ENV === "production" && process.env.NEXT_PUSH_DEMO_ALLOW_PUT !== "1") {
     return new Response("Forbidden", { status: 403 });
   }
-  const body = (await req.json().catch(() => ({}))) as Partial<PushPayload> & {
-    endpoint?: string;
-  };
-  const endpoint = body.endpoint?.trim();
-  if (!endpoint) {
-    return Response.json({ error: "endpoint required" }, { status: 400 });
+  const jar = await cookies();
+  const cookie = jar.get(SUBSCRIPTION_COOKIE);
+  if (!cookie) {
+    return Response.json({ error: "not subscribed" }, { status: 404 });
   }
-  const sub = get(endpoint);
-  if (!sub) {
-    return Response.json({ error: "subscription not found" }, { status: 404 });
+  let sub: PushSubscriptionJSON;
+  try {
+    sub = JSON.parse(cookie.value) as PushSubscriptionJSON;
+  } catch {
+    return Response.json({ error: "malformed subscription cookie" }, { status: 400 });
   }
+  const body = (await req.json().catch(() => ({}))) as Partial<PushPayload>;
   const payload: PushPayload = {
     title: body.title?.trim() || "Demo",
     ...(body.body?.trim() && { body: body.body.trim() }),

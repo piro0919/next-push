@@ -11,3 +11,4 @@ test-results/
 e2e-results/
 public/sw.js
 tsconfig.tsbuildinfo
+.claude/settings.local.json
