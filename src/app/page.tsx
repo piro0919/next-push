@@ -1,8 +1,13 @@
 "use client";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import usePwa from "use-pwa";
 import { usePush } from "../client";
+
+// react-ios-pwa-prompt touches navigator on import — load client-only.
+// It auto-detects iOS Safari and shows nothing on other platforms.
+const PWAPrompt = dynamic(() => import("react-ios-pwa-prompt"), { ssr: false });
 
 const QUICK_START_STEPS = [
   {
@@ -545,6 +550,13 @@ export default function HomePage() {
           </a>
         </div>
       </footer>
+      <PWAPrompt
+        appIconPath="/apple-icon"
+        copyTitle="Install next-push demo"
+        copyDescription="Install this site to your Home Screen — iOS only delivers Web Push notifications to installed PWAs."
+        copyShareStep="1) Tap the Share button (square with an arrow pointing up)."
+        copyAddToHomeScreenStep="2) Tap Add to Home Screen."
+      />
     </div>
   );
 }
