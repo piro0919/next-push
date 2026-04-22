@@ -55,18 +55,17 @@ async function runPushFlow(page: Page, apiCalls: ApiCall[]): Promise<void> {
   const putCall = apiCalls.find((c) => c.method === "PUT");
   expect(putCall?.status).toBe(200);
 
-  const body = putCall?.body as {
-    sent: number;
-    results: Array<{ ok: boolean; gone?: boolean; statusCode?: number; error?: unknown }>;
-  };
-  expect(body.sent).toBeGreaterThanOrEqual(1);
-  const firstResult = body.results[0];
-  if (!firstResult.ok) {
+  const body = putCall?.body as
+    | { ok: true; statusCode: number }
+    | { ok: false; gone?: boolean; statusCode?: number; message?: string };
+  if (!body.ok) {
     throw new Error(
-      `Push service rejected: ${JSON.stringify(firstResult, null, 2)}. This indicates a bug in VAPID signing or payload encryption.`,
+      `Push service rejected: ${JSON.stringify(body, null, 2)}. This indicates a bug in VAPID signing or payload encryption.`,
     );
   }
-  expect(firstResult.ok).toBe(true);
+  expect(body.ok).toBe(true);
+  expect(body.statusCode).toBeGreaterThanOrEqual(200);
+  expect(body.statusCode).toBeLessThan(300);
 }
 
 test.describe("push-demo e2e", () => {
