@@ -6,6 +6,8 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-04-22
+
 ### Changed
 
 - README and `package.json` now explicitly state that the server is

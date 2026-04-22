@@ -1,6 +1,6 @@
 {
   "name": "@piro0919/next-push",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Web Push notifications library with VAPID support — framework-agnostic server (Node / Vercel / Cloudflare Workers / Deno / Bun), with React hooks, Service Worker helpers, and a Next.js App Router scaffold",
   "author": "piro0919",
   "license": "MIT",
