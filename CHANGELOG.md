@@ -13,6 +13,9 @@ before 1.0 may land in minor releases.
   Installing the demo as a PWA is especially relevant on mobile — iOS Safari
   only delivers Web Push to installed PWAs, and Android's installed PWAs get
   friendlier notification treatment.
+- iOS install path covered by `react-ios-pwa-prompt` (loaded via dynamic
+  client-only import). Auto-detects iOS Safari and walks the user through the
+  Share → Add to Home Screen flow without any UA sniffing in our own code.
 - Demo now surfaces the `SendResult` back to the UI — an inline status banner
   under the Send button reports Accepted / Subscription expired / Send failed
   (with HTTP status, message, and retryable hint) so testers can see when a
