@@ -8,6 +8,11 @@ before 1.0 may land in minor releases.
 
 ### Added
 
+- Demo wires in [`use-pwa`](https://github.com/piro0919/use-pwa) and shows an
+  inline **Install** banner when the browser exposes `beforeinstallprompt`.
+  Installing the demo as a PWA is especially relevant on mobile — iOS Safari
+  only delivers Web Push to installed PWAs, and Android's installed PWAs get
+  friendlier notification treatment.
 - Demo now surfaces the `SendResult` back to the UI — an inline status banner
   under the Send button reports Accepted / Subscription expired / Send failed
   (with HTTP status, message, and retryable hint) so testers can see when a
