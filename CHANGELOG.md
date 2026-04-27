@@ -6,6 +6,16 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-04-27
+
+### Fixed
+
+- `next-push --version` now reports the actual package version. It had
+  been hard-coded to `0.1.0` since the CLI first shipped, so the value
+  printed by the binary did not track releases. tsup inlines the version
+  from `package.json` at build time via `define`, keeping it in sync
+  without a runtime fs read.
+
 ## [0.3.2] — 2026-04-22
 
 ### Changed
