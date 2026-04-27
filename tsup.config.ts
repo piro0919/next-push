@@ -1,5 +1,7 @@
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
+
+const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
 
 export default defineConfig({
   entry: {
@@ -14,6 +16,9 @@ export default defineConfig({
   sourcemap: true,
   external: ["react", "react-dom", "next"],
   tsconfig: "tsconfig.build.json",
+  define: {
+    __NEXT_PUSH_VERSION__: JSON.stringify(pkg.version),
+  },
   onSuccess: async () => {
     mkdirSync("dist/templates", { recursive: true });
     copyFileSync("templates/sw.js", "dist/templates/sw.js");

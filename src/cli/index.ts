@@ -3,8 +3,10 @@ import { Command } from "commander";
 import { runInit } from "./commands/init";
 import { generateKeysOutput } from "./commands/keys";
 
+declare const __NEXT_PUSH_VERSION__: string;
+
 const program = new Command();
-program.name("next-push").description("Web Push tools for Next.js").version("0.1.0");
+program.name("next-push").description("Web Push tools for Next.js").version(__NEXT_PUSH_VERSION__);
 
 program
   .command("keys:generate")
