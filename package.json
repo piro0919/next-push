@@ -95,10 +95,10 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
+    "@biomejs/biome": "^2.4.14",
     "@playwright/test": "^1.59.1",
-    "@serwist/turbopack": "^9.5.7",
-    "@tailwindcss/postcss": "^4.2.3",
+    "@serwist/turbopack": "^9.5.11",
+    "@tailwindcss/postcss": "^4.2.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.6.0",
@@ -108,17 +108,17 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.0",
     "happy-dom": "^20.9.0",
-    "hono": "^4.12.14",
+    "hono": "^4.12.16",
     "lefthook": "^2.1.6",
     "next": "^16.2.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-ios-pwa-prompt": "2.0.6",
-    "serwist": "^9.5.7",
-    "tailwindcss": "^4.2.3",
+    "serwist": "^9.5.11",
+    "tailwindcss": "^4.2.4",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "use-pwa": "^3.0.1",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.5"
   }
 }
