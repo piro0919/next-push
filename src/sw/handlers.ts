@@ -42,7 +42,11 @@ export function handlePush(
 
   const { title, ...options } = spec;
   const reg = (self as unknown as { registration: ServiceWorkerRegistration }).registration;
-  event.waitUntil(reg.showNotification(title, options));
+  const track = getNeshTrack(payload);
+  const work = track?.shown
+    ? reg.showNotification(title, options).then(() => fireBeacon(track.shown!, "shown"))
+    : reg.showNotification(title, options);
+  event.waitUntil(work);
 }
 
 function defaultNotificationSpec(
@@ -56,9 +60,31 @@ function defaultNotificationSpec(
     badge: p?.badge ?? defaults?.badge,
     image: p?.image ?? defaults?.image,
     tag: p?.tag ?? defaults?.tag,
-    data: { url: p?.url ?? "/", raw: p?.data },
+    // Forward `_nesh` so the click handler can fire its tracking beacon.
+    data: { url: p?.url ?? "/", raw: p?.data, _nesh: p?._nesh },
     actions: p?.actions,
   };
+}
+
+type NeshTrack = { shown?: string; click?: string };
+
+function getNeshTrack(payload: unknown): NeshTrack | undefined {
+  const meta = (payload as { _nesh?: { track?: unknown } } | null)?._nesh?.track;
+  if (!meta || typeof meta !== "object") return undefined;
+  const t = meta as Record<string, unknown>;
+  const out: NeshTrack = {};
+  if (typeof t.shown === "string") out.shown = t.shown;
+  if (typeof t.click === "string") out.click = t.click;
+  return out.shown || out.click ? out : undefined;
+}
+
+function fireBeacon(url: string, type: "shown" | "clicked"): Promise<unknown> {
+  return fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ type }),
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 type ClickHandler = (data: unknown, notification: Notification) => string | null;
@@ -71,9 +97,15 @@ export async function handleClick(event: NotificationEvent, handler?: ClickHandl
     ? handler(notification.data, notification)
     : ((notification.data as { url?: string } | null)?.url ?? "/");
 
-  if (!url) return;
+  const track = getNeshTrack(notification.data);
+  const beacon = track?.click ? fireBeacon(track.click, "clicked") : Promise.resolve();
 
-  event.waitUntil(focusOrOpen(url));
+  if (!url) {
+    event.waitUntil(beacon);
+    return;
+  }
+
+  event.waitUntil(Promise.all([beacon, focusOrOpen(url)]));
 }
 
 async function focusOrOpen(relativeUrl: string): Promise<void> {

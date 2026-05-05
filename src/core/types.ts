@@ -8,6 +8,16 @@ export interface PushPayload {
   tag?: string;
   url?: string;
   actions?: Array<{ action: string; title: string; icon?: string }>;
+  /** Optional integration metadata reserved for hosted Nesh installations.
+   *  When `_nesh.track.{shown,click}` URLs are present, the default SW
+   *  handlers fire a fire-and-forget `POST {type}` beacon at the matching
+   *  lifecycle event. Other backends can ignore this entirely. */
+  _nesh?: {
+    track?: {
+      shown?: string;
+      click?: string;
+    };
+  };
 }
 
 export interface PushSubscriptionJSON {
