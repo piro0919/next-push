@@ -5,7 +5,15 @@ import type { PushSubscriptionJSON } from "../core/types";
 
 export interface UsePushOptions {
   vapidPublicKey?: string;
+  /** Same-origin path the hook POSTs / DELETEs subscription requests to.
+   *  Defaults to `/api/push`. Use `apiBase` instead when targeting a different
+   *  origin (e.g. a hosted SaaS endpoint). */
   apiPath?: string;
+  /** Full URL (or absolute path) for subscription requests. When set, this
+   *  takes precedence over `apiPath` and is used verbatim — no suffix is
+   *  appended. Useful for pointing the hook at a hosted Push SaaS endpoint
+   *  such as `https://nesh.example.com/api/v1/projects/<id>`. */
+  apiBase?: string;
   swPath?: string;
   /** Override the Service Worker registration scope (e.g. "/" when the SW is
    *  served from a sub-path like /serwist/sw.js). Requires the server to send
@@ -75,6 +83,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     options.vapidPublicKey ??
     (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : undefined);
   const apiPath = options.apiPath ?? "/api/push";
+  const apiUrl = options.apiBase ?? apiPath;
   const swPath = options.swPath ?? "/sw.js";
   const swScope = options.swScope;
 
@@ -129,7 +138,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       });
       const subJson = sub.toJSON() as PushSubscriptionJSON;
       try {
-        const res = await fetch(apiPath, {
+        const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(subJson),
@@ -149,7 +158,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     } finally {
       setIsSubscribing(false);
     }
-  }, [vapidPublicKey, apiPath, swPath, swScope]);
+  }, [vapidPublicKey, apiUrl, swPath, swScope]);
 
   const unsubscribe = useCallback(async () => {
     setError(null);
@@ -158,7 +167,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await sub.unsubscribe();
-        await fetch(`${apiPath}?endpoint=${encodeURIComponent(sub.endpoint)}`, {
+        await fetch(`${apiUrl}?endpoint=${encodeURIComponent(sub.endpoint)}`, {
           method: "DELETE",
         });
       }
@@ -168,7 +177,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       setError(err);
       throw err;
     }
-  }, [apiPath, swPath, swScope]);
+  }, [apiUrl, swPath, swScope]);
 
   return {
     isSupported,

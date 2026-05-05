@@ -6,6 +6,18 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-05
+
+### Added
+
+- `usePush` now accepts an `apiBase` option that takes precedence over
+  `apiPath`. Use it to point the hook at a full URL — for example, a
+  hosted Push SaaS endpoint like
+  `https://nesh.example.com/api/v1/projects/<projectId>`. When set, the
+  same URL is used verbatim for both the subscribe POST and the
+  unsubscribe DELETE; `apiPath` continues to work unchanged when
+  `apiBase` is not provided.
+
 ## [0.3.3] — 2026-04-27
 
 ### Fixed

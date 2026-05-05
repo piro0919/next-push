@@ -131,6 +131,56 @@ describe("usePush", () => {
     ).rejects.toThrow(/vapidPublicKey/);
   });
 
+  it("apiBase overrides apiPath for both subscribe POST and unsubscribe DELETE", async () => {
+    const unsubscribeMock = vi.fn().mockResolvedValue(undefined);
+    const subscriptionObj = {
+      endpoint: "https://ep",
+      keys: { p256dh: "p", auth: "a" },
+      toJSON: () => ({ endpoint: "https://ep", keys: { p256dh: "p", auth: "a" } }),
+      unsubscribe: unsubscribeMock,
+    };
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue(subscriptionObj),
+        subscribe: vi.fn().mockResolvedValue(subscriptionObj),
+      },
+    };
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: {
+        serviceWorker: {
+          register: vi.fn().mockResolvedValue(registration),
+          ready: Promise.resolve(registration),
+        },
+      },
+    });
+
+    const { result } = renderHook(() =>
+      usePush({
+        vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789",
+        apiBase: "https://nesh.example.com/api/v1/projects/proj_xyz",
+        apiPath: "/should-be-ignored",
+      }),
+    );
+    await waitFor(() => expect(result.current.isSupported).toBe(true));
+
+    await act(async () => {
+      await result.current.subscribe();
+    });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "https://nesh.example.com/api/v1/projects/proj_xyz",
+      expect.objectContaining({ method: "POST" }),
+    );
+
+    await act(async () => {
+      await result.current.unsubscribe();
+    });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "https://nesh.example.com/api/v1/projects/proj_xyz?endpoint=https%3A%2F%2Fep",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
   it("uses separate registrations for different swPaths", async () => {
     const registerMock = navigator.serviceWorker.register as ReturnType<typeof vi.fn>;
     registerMock.mockClear();
