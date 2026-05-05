@@ -10,6 +10,7 @@ export type {
 export type {
   CreatePushHandlerConfig,
   PushHandler,
+  SubscribeContext,
 } from "./createPushHandler";
 export { createPushHandler } from "./createPushHandler";
 export type { SendPushConfig } from "./sendPush";

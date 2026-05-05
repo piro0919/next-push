@@ -1,7 +1,18 @@
 import type { PushSubscriptionJSON } from "../core/types";
 
+export interface SubscribeContext {
+  /** Optional external user identifier provided by the client via
+   *  `usePush({ userId })`. Use it to scope subscriptions to your
+   *  application's user identity. */
+  userId?: string;
+}
+
 export interface CreatePushHandlerConfig {
-  onSubscribe: (subscription: PushSubscriptionJSON, req: Request) => Promise<void> | void;
+  onSubscribe: (
+    subscription: PushSubscriptionJSON,
+    req: Request,
+    ctx?: SubscribeContext,
+  ) => Promise<void> | void;
   onUnsubscribe: (endpoint: string, req: Request) => Promise<void> | void;
 }
 
@@ -24,7 +35,7 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
         if (rawText.length > 8192) {
           return new Response("Payload too large", { status: 413 });
         }
-        const body = JSON.parse(rawText) as Partial<PushSubscriptionJSON>;
+        const body = JSON.parse(rawText) as Partial<PushSubscriptionJSON> & { userId?: unknown };
         if (
           !body.endpoint ||
           typeof body.endpoint !== "string" ||
@@ -34,7 +45,9 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
         ) {
           return new Response("Invalid subscription", { status: 400 });
         }
-        await config.onSubscribe(body as PushSubscriptionJSON, req);
+        const userId = typeof body.userId === "string" && body.userId ? body.userId : undefined;
+        const { userId: _omit, ...sub } = body;
+        await config.onSubscribe(sub as PushSubscriptionJSON, req, userId ? { userId } : undefined);
         return new Response(null, { status: 201 });
       } catch (e) {
         console.error("[next-push] POST /api/push error:", e);

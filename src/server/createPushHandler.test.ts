@@ -17,7 +17,24 @@ describe("createPushHandler", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(201);
-    expect(onSubscribe).toHaveBeenCalledWith(body, req);
+    expect(onSubscribe).toHaveBeenCalledWith(body, req, undefined);
+  });
+
+  it("POST passes userId from body as ctx.userId", async () => {
+    const onSubscribe = vi.fn();
+    const { POST } = createPushHandler({ onSubscribe, onUnsubscribe: vi.fn() });
+    const sub = {
+      endpoint: "https://fcm.googleapis.com/fcm/send/abc",
+      keys: { p256dh: "p", auth: "a" },
+    };
+    const req = new Request("http://localhost/api/push", {
+      method: "POST",
+      body: JSON.stringify({ ...sub, userId: "user-42" }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    expect(onSubscribe).toHaveBeenCalledWith(sub, req, { userId: "user-42" });
   });
 
   it("POST returns 400 on invalid body", async () => {

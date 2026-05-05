@@ -19,6 +19,10 @@ export interface UsePushOptions {
    *  served from a sub-path like /serwist/sw.js). Requires the server to send
    *  a `Service-Worker-Allowed: /` response header for the SW script. */
   swScope?: string;
+  /** Optional external user identifier sent alongside the subscription.
+   *  Lets the backend target notifications by your application's user id
+   *  instead of by raw push endpoint. Sent as `userId` in the POST body. */
+  userId?: string;
 }
 
 export interface UsePushReturn {
@@ -86,6 +90,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
   const apiUrl = options.apiBase ?? apiPath;
   const swPath = options.swPath ?? "/sw.js";
   const swScope = options.swScope;
+  const userId = options.userId;
 
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
@@ -138,10 +143,11 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       });
       const subJson = sub.toJSON() as PushSubscriptionJSON;
       try {
+        const body = userId ? { ...subJson, userId } : subJson;
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(subJson),
+          body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error(`Subscribe POST failed: ${res.status}`);
       } catch (e) {
@@ -158,7 +164,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     } finally {
       setIsSubscribing(false);
     }
-  }, [vapidPublicKey, apiUrl, swPath, swScope]);
+  }, [vapidPublicKey, apiUrl, swPath, swScope, userId]);
 
   const unsubscribe = useCallback(async () => {
     setError(null);
