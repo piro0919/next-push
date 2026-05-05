@@ -148,6 +148,14 @@ npx next-push init --receive-only  # client + SW only
 
 ### `usePush(options?)`
 
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `vapidPublicKey` | `string` | `process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY` | VAPID public key (base64url) |
+| `apiPath` | `string` | `/api/push` | Same-origin path for subscribe POST / unsubscribe DELETE |
+| `apiBase` | `string` | — | Full URL (or absolute path) used verbatim. Takes precedence over `apiPath`. Use this to point at a hosted Push SaaS endpoint, e.g. `https://nesh.example.com/api/v1/projects/<projectId>` |
+| `swPath` | `string` | `/sw.js` | Service Worker script URL |
+| `swScope` | `string` | — | SW registration scope override |
+
 | Return | Type | Notes |
 |---|---|---|
 | `isSupported` | `boolean` | `false` during SSR and on unsupported browsers |
