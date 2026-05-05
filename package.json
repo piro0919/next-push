@@ -87,11 +87,11 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "peerDependencies": {
-    "next": ">=15.0.0",
-    "react": ">=18.0.0"
+    "next": ">=16.2.4",
+    "react": ">=19.2.5"
   },
   "dependencies": {
-    "commander": "^13.0.0",
+    "commander": "^14.0.3",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
