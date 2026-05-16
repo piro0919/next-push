@@ -55,8 +55,8 @@ importers:
         specifier: ^20.9.0
         version: 20.9.0
       hono:
-        specifier: ^4.12.18
-        version: 4.12.18
+        specifier: ^4.12.19
+        version: 4.12.19
       lefthook:
         specifier: ^2.1.6
         version: 2.1.6
@@ -85,8 +85,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       use-pwa:
-        specifier: ^3.0.1
-        version: 3.0.1(react@19.2.6)
+        specifier: ^3.0.2
+        version: 3.0.2(react@19.2.6)
       vitest:
         specifier: ^4.1.6
         version: 4.1.6(@types/node@25.8.0)(happy-dom@20.9.0)(vite@8.0.11(@types/node@25.8.0)(esbuild@0.27.7)(jiti@2.7.0))
@@ -1336,8 +1336,8 @@ packages:
     resolution: {integrity: sha512-GZZ9mKe8r646NUAf/zemnGbjYh4Bt8/MqASJY+pSm5ZDtc3YQox+4gsLI7yi1hba6o+eCsGxpHn5+iEVn31/FQ==}
     engines: {node: '>=20.0.0'}
 
-  hono@4.12.18:
-    resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
+  hono@4.12.19:
+    resolution: {integrity: sha512-xa3eYXYXx68XTT4hZ7dRzsXBhaq85ToSrlUJNoR0gwz/1Ap/CNwX47wfvV7pc/xWhjKVVkLT7zBJy8chhNguqQ==}
     engines: {node: '>=16.9.0'}
 
   idb@8.0.3:
@@ -1852,8 +1852,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  use-pwa@3.0.1:
-    resolution: {integrity: sha512-u/j0NXxfDISIVQVYy4CyXhP1bWcpZg3NqdeyODjHaAOhT/OVyfnhXoYY8MWeOc3EvDZkEYWjgE8ejZF/nCP/ZA==}
+  use-pwa@3.0.2:
+    resolution: {integrity: sha512-vCjUGdgzU25F8fAF249mFUEKGs38Dh4Ggg4v5ImI/kwPwI+F0YjiyLuhR/at73KgRCxn9GRim2mV4UHNSKb6SA==}
     peerDependencies:
       react: '>=17.0.0'
 
@@ -2871,7 +2871,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  hono@4.12.18: {}
+  hono@4.12.19: {}
 
   idb@8.0.3: {}
 
@@ -3355,7 +3355,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  use-pwa@3.0.1(react@19.2.6):
+  use-pwa@3.0.2(react@19.2.6):
     dependencies:
       react: 19.2.6
 

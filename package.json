@@ -108,7 +108,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.0",
     "happy-dom": "^20.9.0",
-    "hono": "^4.12.18",
+    "hono": "^4.12.19",
     "lefthook": "^2.1.6",
     "next": "^16.2.6",
     "react": "^19.2.6",
@@ -118,7 +118,7 @@
     "tailwindcss": "^4.3.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
-    "use-pwa": "^3.0.1",
+    "use-pwa": "^3.0.2",
     "vitest": "^4.1.6"
   }
 }
