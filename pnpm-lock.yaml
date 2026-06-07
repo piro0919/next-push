@@ -52,7 +52,7 @@ importers:
         specifier: ^0.28.0
         version: 0.28.0
       happy-dom:
-        specifier: ^20.10.1
+        specifier: ^20.10.2
         version: 20.10.2
       hono:
         specifier: ^4.12.23
