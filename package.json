@@ -107,7 +107,7 @@
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.0",
-    "happy-dom": "^20.10.1",
+    "happy-dom": "^20.10.2",
     "hono": "^4.12.23",
     "lefthook": "^2.1.9",
     "next": "^16.2.7",
