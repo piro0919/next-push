@@ -87,11 +87,11 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "peerDependencies": {
-    "next": ">=15.5.23",
-    "react": ">=18.3.1"
+    "next": ">=16.3.0",
+    "react": ">=19.2.8"
   },
   "dependencies": {
-    "commander": "^13.1.0",
+    "commander": "^15.0.0",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
@@ -99,7 +99,7 @@
     "@playwright/test": "^1.62.1",
     "@serwist/turbopack": "^9.5.12",
     "@tailwindcss/postcss": "^4.3.3",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.5",
     "@types/prompts": "^2.4.9",
@@ -117,7 +117,7 @@
     "serwist": "^9.5.12",
     "tailwindcss": "^4.3.3",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "use-pwa": "^3.0.2",
     "vitest": "^4.1.10"
   }
