@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://next-push.kkweb.io"),
   applicationName: "next-push",
   appleWebApp: {
     capable: true,

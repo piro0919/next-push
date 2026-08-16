@@ -1,0 +1,7 @@
+# pnpm 11 は、インストール時にスクリプトを走らせる依存を明示しないと止まる。
+# この4つはビルド済みバイナリの用意に必要で、走らせないと動かない。
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  lefthook: true
+  sharp: true
