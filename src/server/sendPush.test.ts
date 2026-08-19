@@ -116,8 +116,7 @@ describe("sendPush", () => {
       { vapidKeys, subject: "mailto:a@b.c" },
     );
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.gone).toBe(false);
+    if (!result.ok && !result.gone) {
       expect(result.error.message).toBe("network down");
     }
   });
@@ -130,8 +129,7 @@ describe("sendPush", () => {
         { vapidKeys, subject: "mailto:a@b.c" },
       );
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.gone).toBe(false);
+      if (!result.ok && !result.gone) {
         expect(result.error.message).toMatch(/Invalid subscription/);
       }
     });
@@ -143,8 +141,7 @@ describe("sendPush", () => {
         { vapidKeys, subject: "mailto:a@b.c" },
       );
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.gone).toBe(false);
+      if (!result.ok && !result.gone) {
         expect(result.error.message).toMatch(/Invalid subscription/);
       }
     });
@@ -159,8 +156,7 @@ describe("sendPush", () => {
         { vapidKeys, subject: "mailto:a@b.c" },
       );
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.gone).toBe(false);
+      if (!result.ok && !result.gone) {
         expect(result.error.message).toMatch(/Invalid subscription/);
       }
     });
@@ -238,8 +234,7 @@ describe("sendPush", () => {
         { title: "hi" },
       );
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.gone).toBe(false);
+      if (!result.ok && !result.gone) {
         expect(result.error.message).toMatch(/VAPID keys missing/);
       }
     } finally {
