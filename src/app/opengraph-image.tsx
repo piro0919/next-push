@@ -16,9 +16,8 @@ export default function Image() {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "0 90px",
+        alignItems: "center",
+        padding: "0 80px",
         background: "#0b0b0f",
         color: "#ffffff",
       }}
@@ -26,43 +25,104 @@ export default function Image() {
       <div
         style={{
           display: "flex",
-          width: 120,
-          height: 10,
-          borderRadius: 999,
-          marginBottom: 44,
-          background: "linear-gradient(90deg, #6366f1 0%, #4338ca 100%)",
-        }}
-      />
-      <div
-        style={{
-          display: "flex",
-          fontSize: 84,
-          fontWeight: 700,
-          letterSpacing: -1,
+          flexDirection: "column",
+          justifyContent: "center",
+          width: 600,
         }}
       >
-        {TITLE}
+        <div
+          style={{
+            display: "flex",
+            fontSize: 84,
+            fontWeight: 700,
+            letterSpacing: -1,
+          }}
+        >
+          {TITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 32,
+            marginTop: 28,
+            lineHeight: 1.4,
+            color: "#a1a1aa",
+          }}
+        >
+          {DESCRIPTION}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 26,
+            marginTop: 48,
+            color: "#71717a",
+          }}
+        >
+          kkweb.io
+        </div>
       </div>
+
+      {/* 何をするパッケージなのかを右に置く。名前と説明だけだと、
+          9件が同じ絵になってタイムラインで見分けが付かない */}
       <div
         style={{
+          alignItems: "center",
           display: "flex",
-          fontSize: 32,
-          marginTop: 28,
-          lineHeight: 1.4,
-          color: "#a1a1aa",
+          flex: 1,
+          justifyContent: "center",
         }}
       >
-        {DESCRIPTION}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          fontSize: 26,
-          marginTop: 56,
-          color: "#71717a",
-        }}
-      >
-        kkweb.io
+        {/* 届いた通知そのもの */}
+        <div
+          style={{
+            background: "#15151c",
+            border: "1px solid #26262f",
+            borderRadius: 18,
+            display: "flex",
+            gap: 18,
+            padding: 24,
+            width: 360,
+          }}
+        >
+          <div
+            style={{
+              alignItems: "center",
+              background: "#818cf8",
+              borderRadius: 14,
+              display: "flex",
+              height: 62,
+              justifyContent: "center",
+              width: 62,
+            }}
+          >
+            <svg
+              aria-hidden="true"
+              fill="none"
+              height="34"
+              viewBox="0 0 24 24"
+              width="34"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6Zm0 18a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 21Z"
+                fill="#0b0b0f"
+              />
+            </svg>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              flexDirection: "column",
+              gap: 12,
+              paddingTop: 6,
+            }}
+          >
+            <div style={{ background: "#3f3f46", borderRadius: 4, height: 12, width: 190 }} />
+            <div style={{ background: "#27272e", borderRadius: 4, height: 10, width: 140 }} />
+          </div>
+        </div>
       </div>
     </div>,
     size,
