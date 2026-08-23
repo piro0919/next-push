@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
 export const alt = "next-push";
@@ -9,7 +11,11 @@ export const contentType = "image/png";
 const TITLE = "next-push";
 const DESCRIPTION = "Web Push notifications for Next.js App Router.";
 
-export default function Image() {
+export default async function Image() {
+  /* 見出しの書体はサイトと同じ Space Grotesk。使う文字だけに絞ったものを
+     同梱している。文言を変えたら assets/README.md の手順で作り直す */
+  const font = await readFile(join(process.cwd(), "assets/SpaceGrotesk-700-subset.ttf"));
+
   return new ImageResponse(
     <div
       style={{
@@ -125,6 +131,9 @@ export default function Image() {
         </div>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      fonts: [{ data: font, name: "Space Grotesk", style: "normal", weight: 700 }],
+    },
   );
 }

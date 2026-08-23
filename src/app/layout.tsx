@@ -1,6 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -12,6 +12,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+});
+
+/* 見出しの書体。9件が同じ字面だと、並んだときに見分けが付かない */
+const display = Space_Grotesk({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -34,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable}`}>
       <body>
         {children}
         <Analytics />

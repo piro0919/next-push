@@ -12,6 +12,7 @@
 }
 
 @theme inline {
+  --font-display: var(--font-display);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);

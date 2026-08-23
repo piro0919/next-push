@@ -279,7 +279,7 @@ export default function HomePage() {
               width={80}
             />
           </div>
-          <h1 className="mb-3 text-balance font-bold text-4xl tracking-tight sm:text-5xl">
+          <h1 className="mb-3 text-balance font-display font-bold text-4xl tracking-tight sm:text-5xl">
             Web Push for Next.js
           </h1>
           <p className="mx-auto max-w-xl text-balance text-[color:var(--muted)] text-lg">
