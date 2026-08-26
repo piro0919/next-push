@@ -93,7 +93,7 @@
     "react": ">=18.3.1"
   },
   "dependencies": {
-    "commander": "^13.1.0",
+    "commander": "^15.0.0",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
@@ -101,7 +101,7 @@
     "@playwright/test": "^1.62.1",
     "@serwist/turbopack": "^9.5.12",
     "@tailwindcss/postcss": "^4.3.3",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.5",
     "@types/prompts": "^2.4.9",
