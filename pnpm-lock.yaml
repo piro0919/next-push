@@ -58,7 +58,7 @@ importers:
         specifier: ^20.11.6
         version: 20.11.6
       hono:
-        specifier: ^4.13.4
+        specifier: ^4.13.5
         version: 4.13.5
       lefthook:
         specifier: ^2.1.10
@@ -88,8 +88,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       use-pwa:
-        specifier: ^3.0.3
-        version: 3.0.3(react@19.2.8)
+        specifier: ^3.1.0
+        version: 3.1.0(react@19.2.8)
       vitest:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@25.9.5)(happy-dom@20.11.6)(vite@8.2.2(@types/node@25.9.5)(esbuild@0.27.7)(jiti@2.7.0))
@@ -1952,8 +1952,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  use-pwa@3.0.3:
-    resolution: {integrity: sha512-pIjuyJAM3jWMQUD9W3XFlzWFbVj/QXcwhz1CCSVfAIpNficXV0z8GgU37UerkvvsOGDQ8Mf+B9gb1t6ssOIw2A==}
+  use-pwa@3.1.0:
+    resolution: {integrity: sha512-oDLBfxkjCwua8sR7NW2BA6n8GLleMgM1eAfqNTh3Pct2h5G9XJ7hOGy2R+0gzBYh6QxEvB09cZrkPH16fAQnGg==}
     peerDependencies:
       react: '>=17.0.0'
 
@@ -3481,7 +3481,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  use-pwa@3.0.3(react@19.2.8):
+  use-pwa@3.1.0(react@19.2.8):
     dependencies:
       react: 19.2.8
 
