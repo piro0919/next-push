@@ -90,7 +90,7 @@
   },
   "peerDependencies": {
     "next": ">=15.5.25",
-    "react": ">=18.3.1"
+    "react": ">=19.2.8"
   },
   "dependencies": {
     "commander": "^15.0.0",
