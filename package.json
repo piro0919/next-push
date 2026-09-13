@@ -97,7 +97,7 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
+    "@biomejs/biome": "^2.5.13",
     "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",
     "@tailwindcss/postcss": "^4.3.3",
