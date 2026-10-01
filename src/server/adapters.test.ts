@@ -31,7 +31,11 @@ describe("createPushHandler framework-agnostic adapters", () => {
       { method: "DELETE" },
     );
     expect(deleteRes.status).toBe(204);
-    expect(onUnsubscribe).toHaveBeenCalledWith(validSubscription.endpoint, expect.any(Request));
+    expect(onUnsubscribe).toHaveBeenCalledWith(
+      validSubscription.endpoint,
+      expect.any(Request),
+      undefined,
+    );
   });
 
   it("works as a plain Fetch handler (Cloudflare Workers / Deno / Bun style)", async () => {

@@ -91,6 +91,10 @@ export async function broadcast(payload: { title: string; body?: string }) {
 
 ## Per-user notify
 
+Fill `user_id` from `ctx.userId` in `onSubscribe`. `createPushHandler` sets it
+from your `getUserId` option (the session), never from the request body — see
+the README section "Security: who owns a subscription".
+
 ```ts
 const rows = await sql<
   { endpoint: string; p256dh: string; auth: string }[]

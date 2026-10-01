@@ -63,7 +63,10 @@ export async function broadcast(payload: { title: string; body?: string }) {
 
 ## Per-user indexing
 
-To push to a single user (or a user's devices), use a Redis set per user:
+To push to a single user (or a user's devices), use a Redis set per user.
+Take `userId` from `ctx.userId`, which `createPushHandler` fills from your
+`getUserId` option (the session) — never from the request body. See the
+README section "Security: who owns a subscription".
 
 ```ts
 // on subscribe

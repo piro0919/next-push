@@ -11,6 +11,8 @@ export type {
   CreatePushHandlerConfig,
   PushHandler,
   SubscribeContext,
+  UnsubscribeContext,
+  UserIdResolver,
 } from "./createPushHandler";
 export { createPushHandler } from "./createPushHandler";
 export type { SendPushConfig } from "./sendPush";

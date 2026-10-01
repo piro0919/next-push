@@ -61,12 +61,62 @@ export const { POST, DELETE } = createPushHandler({
 });
 ```
 
+> [!IMPORTANT]
+> **Bind subscriptions to users on the server, never from the request body.**
+> If you need per-user notifications, pass `getUserId` and read the user from your session.
+> See [Security: who owns a subscription](#security-who-owns-a-subscription).
+
 ```ts
 // wherever you want to send a push
 import { sendPush } from "@piro0919/next-push/server";
 const result = await sendPush(subscription, { title: "Hello", body: "World" });
 if (!result.ok && result.gone) await deleteSubscription(subscription.endpoint);
 ```
+
+## Security: who owns a subscription
+
+The subscribe endpoint is public: any browser can POST any body to it. If your
+server stored a subscription under a `userId` taken from that body, anyone could
+register their own browser under someone else's id and receive that person's
+notifications.
+
+So `createPushHandler` never trusts a client-supplied `userId`. The user comes
+from your server through `getUserId`, which reads the session:
+
+```ts
+// app/api/push/route.ts
+import { createPushHandler } from "@piro0919/next-push/server";
+import { auth } from "@/auth"; // your session library (Auth.js, Lucia, iron-session, ...)
+import { db } from "@/lib/db";
+
+export const { POST, DELETE } = createPushHandler({
+  // Runs on every POST / DELETE. Return null for signed-out visitors.
+  getUserId: async () => (await auth())?.user?.id ?? null,
+  onSubscribe: async (sub, _req, ctx) => {
+    // ctx?.userId is the session user, never a value from the body
+    await db.saveSubscription(sub, ctx?.userId ?? null);
+  },
+  onUnsubscribe: async (endpoint, _req, ctx) => {
+    await db.deleteSubscription(endpoint, ctx?.userId ?? null);
+  },
+});
+```
+
+`getUserId` receives the raw `Request`, so outside Next.js read the cookie or
+`Authorization` header from it directly.
+
+How a body `userId` is handled:
+
+| `getUserId` | Body `userId` | Result |
+|---|---|---|
+| not set | absent | `201`, anonymous (`ctx` undefined) |
+| not set | present | `403` — the server cannot verify it |
+| returns `"u1"` | absent or `"u1"` | `201`, `ctx.userId === "u1"` |
+| returns `"u1"` | `"u2"` | `403` |
+| returns `null` | present | `403` |
+
+If you write your own subscribe endpoint instead of using `createPushHandler`,
+apply the same rule: resolve the user from the session, not from the body.
 
 ## Non-Next.js usage
 
@@ -155,6 +205,11 @@ npx next-push init --receive-only  # client + SW only
 | `apiBase` | `string` | — | Full URL (or absolute path) used verbatim. Takes precedence over `apiPath`. Use this to point at a hosted Push SaaS endpoint, e.g. `https://nesh.example.com/api/v1/projects/<projectId>` |
 | `swPath` | `string` | `/sw.js` | Service Worker script URL |
 | `swScope` | `string` | — | SW registration scope override |
+| `userId` | `string` | — | Not trusted by the server. Only checked against the user `getUserId` resolves; you rarely need it. See [Security: who owns a subscription](#security-who-owns-a-subscription) |
+
+Every `usePush()` call that uses the same `swPath` / `swScope` shares `subscription` and `permission`, so two components on a page always agree. `isSubscribing` and `error` belong to the instance that started the action.
+
+`unsubscribe()` removes the browser subscription first, then sends the DELETE. If the DELETE fails, `subscription` is already `null` and the promise rejects with the status so you can retry the server call.
 
 | Return | Type | Notes |
 |---|---|---|
@@ -173,9 +228,17 @@ Returns a discriminated `SendResult`:
 - `{ ok: false, gone: true, statusCode: 404 | 410 }` — subscription is dead, delete it
 - `{ ok: false, gone: false, error, statusCode? }` — other failure (transient or misconfig)
 
-### `createPushHandler({ onSubscribe, onUnsubscribe })`
+### `createPushHandler({ onSubscribe, onUnsubscribe, getUserId? })`
 
 Returns `{ POST, DELETE }` ready to re-export from `app/api/push/route.ts`.
+
+| Option | Notes |
+|---|---|
+| `onSubscribe(sub, req, ctx?)` | `ctx.userId` is the user `getUserId` resolved, or absent for anonymous visitors |
+| `onUnsubscribe(endpoint, req, ctx?)` | Same `ctx` as above, so you can scope the delete to the caller |
+| `getUserId(req)` | Returns the signed-in user's id from your session, or `null`. The only source of `ctx.userId` |
+
+Responses: `201` subscribed, `204` unsubscribed, `400` malformed JSON or subscription, `403` client-supplied `userId` rejected, `413` body over 8 KB, `500` your callback threw.
 
 ### Service Worker helpers
 
