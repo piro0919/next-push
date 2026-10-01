@@ -6,6 +6,47 @@ before 1.0 may land in minor releases.
 
 ## [Unreleased]
 
+> Entries for 1.0.0 and 1.0.1 were not recorded here. Their changes are in the
+> git history and on npm.
+
+### BREAKING
+
+- `createPushHandler` no longer trusts a `userId` sent in the POST body.
+  Before, it was passed straight into `ctx.userId`, so anyone could register
+  their browser under another user's id and receive that user's
+  notifications. The user now comes from the new `getUserId(req)` option,
+  which you implement by reading your session. A body `userId` is only
+  compared against it: a mismatch returns 403, and so does any body
+  `userId` when `getUserId` is not configured. Requests without `userId`
+  behave as before. To migrate, add `getUserId` and stop relying on the
+  value from `usePush({ userId })`.
+
+### Added
+
+- `getUserId` option on `createPushHandler`; `ctx.userId` is filled from it
+  even when the client sends nothing.
+- `onUnsubscribe` receives the same `ctx` as a third argument.
+
+### Fixed
+
+- Every `usePush()` with the same `swPath` / `swScope` now shares
+  `subscription` and `permission` through a module-level store
+  (`useSyncExternalStore`, SSR snapshot is "not supported / no
+  subscription"). Before, each component kept its own copy and they
+  disagreed after one of them subscribed.
+- `unsubscribe()` checks the DELETE response and rejects (and sets `error`)
+  on a non-2xx status instead of reporting success.
+- Malformed JSON, or a body that is not an object, returns 400 instead of 500.
+- `"use client"` is kept at the top of `dist/client/index.{js,cjs}`. esbuild
+  stripped it during bundling, so importing the hook from a Server Component
+  file in Next.js failed. Server, SW and CLI entries stay without it.
+
+### Changed
+
+- `next` is now an optional peer dependency. The library never imports it;
+  only the CLI scaffold writes Next.js files, so non-Next.js users no longer
+  get a missing-peer warning.
+
 ## [0.4.0] — 2026-05-05
 
 ### Added
