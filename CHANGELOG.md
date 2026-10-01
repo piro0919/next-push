@@ -4,7 +4,7 @@ All notable changes to this project are documented here. This project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html); breaking changes
 before 1.0 may land in minor releases.
 
-## [Unreleased]
+## 2.0.0 - 2026-10-01
 
 > Entries for 1.0.0 and 1.0.1 were not recorded here. Their changes are in the
 > git history and on npm.
