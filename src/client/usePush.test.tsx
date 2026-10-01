@@ -205,4 +205,66 @@ describe("usePush", () => {
     expect(calls).toContain("/sw-a.js");
     expect(calls).toContain("/sw-b.js");
   });
+  it("shares subscription state between hook instances", async () => {
+    const { result: a } = renderHook(() =>
+      usePush({ vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789" }),
+    );
+    const { result: b } = renderHook(() =>
+      usePush({ vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789" }),
+    );
+    await waitFor(() => expect(b.current.isSupported).toBe(true));
+    expect(b.current.subscription).toBeNull();
+
+    await act(async () => {
+      await a.current.subscribe();
+    });
+
+    expect(b.current.subscription).toEqual({
+      endpoint: "https://ep",
+      keys: { p256dh: "p", auth: "a" },
+    });
+    expect(b.current.permission).toBe("granted");
+  });
+
+  it("rejects and exposes error when unsubscribe DELETE fails", async () => {
+    const subscriptionObj = {
+      endpoint: "https://ep",
+      keys: { p256dh: "p", auth: "a" },
+      toJSON: () => ({ endpoint: "https://ep", keys: { p256dh: "p", auth: "a" } }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    };
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue(subscriptionObj),
+        subscribe: vi.fn().mockResolvedValue(subscriptionObj),
+      },
+    };
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: {
+        serviceWorker: {
+          register: vi.fn().mockResolvedValue(registration),
+          ready: Promise.resolve(registration),
+        },
+      },
+    });
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+
+    const { result } = renderHook(() =>
+      usePush({ vapidPublicKey: "BXYZ_dummy_public_key_base64url_abcdef0123456789" }),
+    );
+    await waitFor(() => expect(result.current.subscription).not.toBeNull());
+
+    let thrown: unknown;
+    await act(async () => {
+      await result.current.unsubscribe().catch((e: unknown) => {
+        thrown = e;
+      });
+    });
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe("Unsubscribe DELETE failed: 500");
+    expect(result.current.error?.message).toBe("Unsubscribe DELETE failed: 500");
+    // The browser subscription is already gone, so state reflects that.
+    expect(result.current.subscription).toBeNull();
+  });
 });

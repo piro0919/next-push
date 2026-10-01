@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { base64UrlDecode } from "../core/base64";
 import type { PushSubscriptionJSON } from "../core/types";
 
@@ -19,9 +19,15 @@ export interface UsePushOptions {
    *  served from a sub-path like /serwist/sw.js). Requires the server to send
    *  a `Service-Worker-Allowed: /` response header for the SW script. */
   swScope?: string;
-  /** Optional external user identifier sent alongside the subscription.
-   *  Lets the backend target notifications by your application's user id
-   *  instead of by raw push endpoint. Sent as `userId` in the POST body. */
+  /** Optional user id sent as `userId` in the POST body.
+   *
+   *  SECURITY: this value is NOT trusted by `createPushHandler`. The server
+   *  resolves the user itself through its `getUserId` option (e.g. from the
+   *  session) and only uses the body value as a consistency check: a
+   *  mismatch, or any `userId` when `getUserId` is not configured, is
+   *  rejected with 403. You normally do not need to pass this at all. If you
+   *  run your own backend, never store a subscription under a user id taken
+   *  from the request body. */
   userId?: string;
 }
 
@@ -37,13 +43,72 @@ export interface UsePushReturn {
 
 const swRegistrations = new Map<string, Promise<ServiceWorkerRegistration>>();
 
-/** @internal — resets the cached SW registration promise (for testing only) */
+interface SharedState {
+  permission: NotificationPermission;
+  subscription: PushSubscriptionJSON | null;
+}
+
+// Subscription state lives outside React so every usePush() instance that
+// points at the same Service Worker sees the same value. Keyed like the SW
+// registration cache, since a subscription belongs to a registration.
+const SERVER_STATE: SharedState = { permission: "default", subscription: null };
+const stores = new Map<string, { state: SharedState; listeners: Set<() => void> }>();
+
+function getStore(key: string) {
+  let store = stores.get(key);
+  if (!store) {
+    store = { state: SERVER_STATE, listeners: new Set() };
+    stores.set(key, store);
+  }
+  return store;
+}
+
+function setShared(key: string, patch: Partial<SharedState>): void {
+  const store = getStore(key);
+  const next = { ...store.state, ...patch };
+  if (
+    next.permission === store.state.permission &&
+    sameSubscription(next.subscription, store.state.subscription)
+  ) {
+    return;
+  }
+  store.state = next;
+  for (const listener of store.listeners) listener();
+}
+
+function sameSubscription(a: PushSubscriptionJSON | null, b: PushSubscriptionJSON | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.endpoint === b.endpoint && a.keys.p256dh === b.keys.p256dh && a.keys.auth === b.keys.auth
+  );
+}
+
+function cacheKeyFor(swPath: string, swScope?: string): string {
+  return swScope ? `${swPath}|${swScope}` : swPath;
+}
+
+function detectSupport(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof navigator !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window
+  );
+}
+
+const subscribeNoop = () => () => {};
+const getServerSupport = () => false;
+
+/** @internal — resets the cached SW registration promise and shared state (for testing only) */
 export function _resetSwRegistration(): void {
   swRegistrations.clear();
+  stores.clear();
 }
 
 function getOrRegisterSW(swPath: string, swScope?: string): Promise<ServiceWorkerRegistration> {
-  const cacheKey = swScope ? `${swPath}|${swScope}` : swPath;
+  const cacheKey = cacheKeyFor(swPath, swScope);
   const cached = swRegistrations.get(cacheKey);
   if (cached) return cached;
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
@@ -92,27 +157,45 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
   const swScope = options.swScope;
   const userId = options.userId;
 
-  const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>("default");
-  const [subscription, setSubscription] = useState<PushSubscriptionJSON | null>(null);
+  const key = cacheKeyFor(swPath, swScope);
+
+  const isSupported = useSyncExternalStore(subscribeNoop, detectSupport, getServerSupport);
+  const subscribeStore = useCallback(
+    (listener: () => void) => {
+      const store = getStore(key);
+      store.listeners.add(listener);
+      return () => {
+        store.listeners.delete(listener);
+      };
+    },
+    [key],
+  );
+  const getSnapshot = useCallback(() => getStore(key).state, [key]);
+  const { permission, subscription } = useSyncExternalStore(
+    subscribeStore,
+    getSnapshot,
+    () => SERVER_STATE,
+  );
+  // In-flight flag and last error are per instance: they describe the action
+  // this component started, not the shared subscription.
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const supported =
-      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    setIsSupported(supported);
-    if (!supported) return;
+    if (!isSupported) return;
 
-    setPermission(Notification.permission);
+    setShared(key, { permission: Notification.permission });
 
     let ignore = false;
     void (async () => {
       try {
         const reg = await getOrRegisterSW(swPath, swScope);
         const sub = await reg.pushManager.getSubscription();
-        if (!ignore && sub) setSubscription(sub.toJSON() as PushSubscriptionJSON);
+        if (!ignore) {
+          setShared(key, {
+            subscription: sub ? (sub.toJSON() as PushSubscriptionJSON) : null,
+          });
+        }
       } catch (e) {
         if (!ignore) setError(e instanceof Error ? e : new Error(String(e)));
       }
@@ -120,7 +203,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     return () => {
       ignore = true;
     };
-  }, [swPath, swScope]);
+  }, [isSupported, key, swPath, swScope]);
 
   const subscribe = useCallback(async (): Promise<PushSubscriptionJSON> => {
     if (!vapidPublicKey) {
@@ -134,7 +217,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     setError(null);
     try {
       const perm = await Notification.requestPermission();
-      setPermission(perm);
+      setShared(key, { permission: perm });
       if (perm !== "granted") throw new Error(`Permission ${perm}`);
       const reg = await getOrRegisterSW(swPath, swScope);
       const sub = await reg.pushManager.subscribe({
@@ -155,7 +238,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
         await sub.unsubscribe().catch(() => {});
         throw e;
       }
-      setSubscription(subJson);
+      setShared(key, { subscription: subJson });
       return subJson;
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
@@ -164,7 +247,7 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
     } finally {
       setIsSubscribing(false);
     }
-  }, [vapidPublicKey, apiUrl, swPath, swScope, userId]);
+  }, [vapidPublicKey, apiUrl, key, swPath, swScope, userId]);
 
   const unsubscribe = useCallback(async () => {
     setError(null);
@@ -173,17 +256,21 @@ export function usePush(options: UsePushOptions = {}): UsePushReturn {
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await sub.unsubscribe();
-        await fetch(`${apiUrl}?endpoint=${encodeURIComponent(sub.endpoint)}`, {
+        // The browser side is gone either way, so reflect that before
+        // reporting a server failure: the user is not subscribed any more.
+        setShared(key, { subscription: null });
+        const res = await fetch(`${apiUrl}?endpoint=${encodeURIComponent(sub.endpoint)}`, {
           method: "DELETE",
         });
+        if (!res.ok) throw new Error(`Unsubscribe DELETE failed: ${res.status}`);
       }
-      setSubscription(null);
+      setShared(key, { subscription: null });
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
       setError(err);
       throw err;
     }
-  }, [apiUrl, swPath, swScope]);
+  }, [apiUrl, key, swPath, swScope]);
 
   return {
     isSupported,
