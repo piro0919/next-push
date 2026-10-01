@@ -92,6 +92,11 @@
     "next": ">=15.5.26",
     "react": ">=18.3.1"
   },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "commander": "^15.0.0",
     "prompts": "^2.4.2"
