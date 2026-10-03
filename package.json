@@ -102,7 +102,7 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.5.15",
     "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",
     "@tailwindcss/postcss": "^4.3.3",
@@ -116,9 +116,9 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.2",
     "happy-dom": "^20.14.5",
-    "hono": "^4.13.11",
+    "hono": "^4.13.12",
     "lefthook": "^2.1.15",
-    "next": "^16.3.7",
+    "next": "^16.3.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-ios-pwa-prompt": "2.0.6",
