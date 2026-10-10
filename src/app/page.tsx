@@ -548,6 +548,15 @@ export default function HomePage() {
           >
             source
           </a>
+          {" · "}
+          <a
+            className="transition-colors hover:text-[color:var(--foreground)]"
+            href="https://buymeacoffee.com/piro0919"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Buy Me a Coffee
+          </a>
         </div>
       </footer>
       <PWAPrompt
