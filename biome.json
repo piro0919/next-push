@@ -1,5 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+  "extends": ["@piro0919/biome-config/biome", "@piro0919/biome-config/tailwind"],
   "files": {
     "includes": [
       "**/*.ts",
