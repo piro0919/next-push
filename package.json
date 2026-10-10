@@ -104,7 +104,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@playwright/test": "^1.63.0",
-    "@serwist/turbopack": "^9.5.12",
+    "@serwist/turbopack": "^9.5.13",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -122,7 +122,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-ios-pwa-prompt": "2.0.6",
-    "serwist": "^9.5.12",
+    "serwist": "^9.5.13",
     "tailwindcss": "^4.3.3",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
