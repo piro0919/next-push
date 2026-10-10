@@ -18,6 +18,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.15
         version: 2.5.15
+      '@piro0919/biome-config':
+        specifier: github:piro0919/biome-config#v1.0.0
+        version: https://codeload.github.com/piro0919/biome-config/tar.gz/0545bc1c5f5ff02a363cf1d0d84cf9a8c7c7b00f(@biomejs/biome@2.5.15)
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0
@@ -581,6 +584,12 @@ packages:
 
   '@oxc-project/types@0.146.0':
     resolution: {integrity: sha512-XC0QsnnhVe7sLIWmYmdPw7x5P0h4W8vUU3Nv1ySgWXtvCz8NizoAEpGXA0sOYoJQV2Rl13LgURAHQ5cI5ILCSA==}
+
+  '@piro0919/biome-config@https://codeload.github.com/piro0919/biome-config/tar.gz/0545bc1c5f5ff02a363cf1d0d84cf9a8c7c7b00f':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/piro0919/biome-config/tar.gz/0545bc1c5f5ff02a363cf1d0d84cf9a8c7c7b00f}
+    version: 1.0.0
+    peerDependencies:
+      '@biomejs/biome': ^2.1.0
 
   '@playwright/test@1.63.0':
     resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
@@ -2365,6 +2374,10 @@ snapshots:
     optional: true
 
   '@oxc-project/types@0.146.0': {}
+
+  '@piro0919/biome-config@https://codeload.github.com/piro0919/biome-config/tar.gz/0545bc1c5f5ff02a363cf1d0d84cf9a8c7c7b00f(@biomejs/biome@2.5.15)':
+    dependencies:
+      '@biomejs/biome': 2.5.15
 
   '@playwright/test@1.63.0':
     dependencies:
