@@ -104,7 +104,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@piro0919/biome-config": "github:piro0919/biome-config#v1.0.0",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "^1.64.0",
     "@serwist/turbopack": "^9.5.13",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
@@ -118,7 +118,7 @@
     "esbuild-wasm": "^0.28.2",
     "happy-dom": "^20.14.5",
     "hono": "^4.13.13",
-    "lefthook": "^2.1.17",
+    "lefthook": "^2.2.0",
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
