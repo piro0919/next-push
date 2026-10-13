@@ -203,7 +203,7 @@ npx next-push init --receive-only  # client + SW only
 | `vapidPublicKey` | `string` | `process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY` | VAPID public key (base64url) |
 | `apiPath` | `string` | `/api/push` | Same-origin path for subscribe POST / unsubscribe DELETE |
 | `apiBase` | `string` | — | Full URL (or absolute path) used verbatim. Takes precedence over `apiPath`. Use this to point at a hosted Push SaaS endpoint, e.g. `https://nesh.example.com/api/v1/projects/<projectId>` |
-| `swPath` | `string` | `/sw.js` | Service Worker script URL |
+| `swPath` | `string` | `/sw.js` | Service Worker script URL. Pass it whenever your SW is not at `/sw.js` (for example Serwist at `/serwist/sw.js`); otherwise `usePush` registers a `/sw.js` that does not exist and subscribing fails |
 | `swScope` | `string` | — | SW registration scope override |
 | `userId` | `string` | — | Not trusted by the server. Only checked against the user `getUserId` resolves; you rarely need it. See [Security: who owns a subscription](#security-who-owns-a-subscription) |
 
@@ -304,9 +304,10 @@ import { usePwa } from "use-pwa";
 import { usePush } from "@piro0919/next-push";
 
 export function NotifyButton() {
-  const { isPwa } = usePwa();
+  // needsManualInstall: iOS / iPadOS, not added to the Home Screen yet (use-pwa 4)
+  const { needsManualInstall } = usePwa();
   const { subscribe, isSupported } = usePush();
-  if (!isPwa) return <p>Install this app to enable notifications on iOS.</p>;
+  if (needsManualInstall) return <p>Add this app to your Home Screen to enable notifications.</p>;
   if (!isSupported) return null;
   return <button onClick={subscribe}>Enable notifications</button>;
 }
