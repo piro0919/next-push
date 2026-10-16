@@ -4,7 +4,7 @@ All notable changes to this project are documented here. This project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html); breaking changes
 before 1.0 may land in minor releases.
 
-## 3.0.0 - Unreleased
+## 3.0.0 - 2026-10-16
 
 ### BREAKING
 

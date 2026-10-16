@@ -67,7 +67,7 @@ Because the SW is served at `/serwist/sw.js`, the demo page passes `usePush({ sw
 
 ## Push service endpoint check (v3.0.0)
 
-Agreed on 2026-10-16 in a home-window session and implemented the same day: `src/server/pushEndpoint.ts`, the `extraPushHosts` option (name delegated to Claude), and a check in the demo PUT, which reads the subscription back from a cookie the caller controls. CHANGELOG has it under "3.0.0 - Unreleased". Remaining: bump the version and publish, then the "After publishing" steps below.
+Agreed on 2026-10-16 in a home-window session and implemented the same day: `src/server/pushEndpoint.ts`, the `extraPushHosts` option (name delegated to Claude), and a check in the demo PUT, which reads the subscription back from a cookie the caller controls. Published as 3.0.0 on 2026-10-16. Remaining: the "After publishing" steps below.
 
 The "Why" and "What to build" sections below are the plan as agreed and describe the code before this change.
 
