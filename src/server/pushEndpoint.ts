@@ -22,7 +22,7 @@ const PUSH_HOSTS = [
 const MAX_ENDPOINT_LENGTH = 1000;
 
 /** Keys are base64url. p256dh is 65 bytes (87 chars), auth is 16 bytes (22 chars). */
-const B64URL = /^[A-Za-z0-9_-]+=*$/;
+const B64URL = /^[A-Za-z0-9_-]+={0,2}$/;
 const P256DH_LENGTH = 87;
 const AUTH_LENGTH = 22;
 
@@ -49,7 +49,10 @@ export function isPushServiceEndpoint(
     url.port === "" &&
     url.username === "" &&
     url.password === "" &&
-    [...PUSH_HOSTS, ...extraHosts].some((host) => host.test(url.hostname))
+    // `search` ignores `lastIndex`, so a `g` or `y` flag on a user pattern
+    // cannot make the same host pass on one call and fail on the next.
+    (PUSH_HOSTS.some((host) => host.test(url.hostname)) ||
+      extraHosts.some((host) => url.hostname.search(host) !== -1))
   );
 }
 

@@ -85,11 +85,13 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
         }
         // Only browser push service endpoints are accepted, so the sender is
         // never made to POST to an arbitrary host.
-        if (!isObject(body) || !isValidSubscription(body, config.extraPushHosts)) {
+        if (!isValidSubscription(body, config.extraPushHosts)) {
           return new Response("Invalid subscription", { status: 400 });
         }
 
-        const { userId: claimedUserId, ...sub } = body;
+        const { userId: claimedUserId, ...sub } = body as PushSubscriptionJSON & {
+          userId?: unknown;
+        };
         const claimed =
           typeof claimedUserId === "string" && claimedUserId ? claimedUserId : undefined;
         const userId = await resolveUserId(config.getUserId, req);
@@ -103,11 +105,7 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
           return new Response("Forbidden", { status: 403 });
         }
 
-        await config.onSubscribe(
-          sub as unknown as PushSubscriptionJSON,
-          req,
-          userId ? { userId } : undefined,
-        );
+        await config.onSubscribe(sub, req, userId ? { userId } : undefined);
         return new Response(null, { status: 201 });
       } catch (e) {
         console.error("[next-push] POST /api/push error:", e);

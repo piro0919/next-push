@@ -65,9 +65,11 @@ Because the SW is served at `/serwist/sw.js`, the demo page passes `usePush({ sw
 - Design spec: [docs/superpowers/specs/2026-04-21-next-push-design.md](docs/superpowers/specs/2026-04-21-next-push-design.md)
 - Implementation plan: [docs/superpowers/plans/2026-04-21-next-push-v0.1-implementation.md](docs/superpowers/plans/2026-04-21-next-push-v0.1-implementation.md)
 
-## Next task: push service endpoint check (v3.0.0)
+## Push service endpoint check (v3.0.0)
 
-Agreed on 2026-10-16 in a home-window session. Implemented on 2026-10-16 (code, tests, README, CHANGELOG under "3.0.0 - Unreleased"); not committed, version not bumped, not published. The extra-hosts option is named `extraPushHosts` (name delegated to Claude).
+Agreed on 2026-10-16 in a home-window session and implemented the same day: `src/server/pushEndpoint.ts`, the `extraPushHosts` option (name delegated to Claude), and a check in the demo PUT, which reads the subscription back from a cookie the caller controls. CHANGELOG has it under "3.0.0 - Unreleased". Remaining: bump the version and publish, then the "After publishing" steps below.
+
+The "Why" and "What to build" sections below are the plan as agreed and describe the code before this change.
 
 ### Why
 

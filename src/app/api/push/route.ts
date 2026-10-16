@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import type { PushPayload, PushSubscriptionJSON } from "../../../core/types";
-import { createPushHandler, sendPush } from "../../../server";
+import type { PushPayload } from "../../../core/types";
+import { createPushHandler, isValidSubscription, sendPush } from "../../../server";
 
 // The demo only sends push notifications back to the caller themselves, so
 // we don't need a server-side database at all. We stash the caller's
@@ -42,10 +42,15 @@ export async function PUT(req: Request): Promise<Response> {
   if (!cookie) {
     return Response.json({ error: "not subscribed" }, { status: 404 });
   }
-  let sub: PushSubscriptionJSON;
+  let sub: unknown;
   try {
-    sub = JSON.parse(cookie.value) as PushSubscriptionJSON;
+    sub = JSON.parse(cookie.value);
   } catch {
+    return Response.json({ error: "malformed subscription cookie" }, { status: 400 });
+  }
+  // The caller controls their own Cookie header, so check the subscription
+  // again before sending, or the cookie becomes a way to make us POST anywhere.
+  if (!isValidSubscription(sub)) {
     return Response.json({ error: "malformed subscription cookie" }, { status: 400 });
   }
   const body = (await req.json().catch(() => ({}))) as Partial<PushPayload>;

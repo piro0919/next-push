@@ -52,6 +52,15 @@ describe("isPushServiceEndpoint", () => {
     expect(isPushServiceEndpoint(endpoint, [/^push\.example\.com$/])).toBe(true);
   });
 
+  it.each([
+    ["g", /^push\.example\.com$/g],
+    ["y", /^push\.example\.com$/y],
+  ])("accepts an extraHosts host on every call when the pattern has the %s flag", (_, host) => {
+    const endpoint = "https://push.example.com/send/abc";
+    expect(isPushServiceEndpoint(endpoint, [host])).toBe(true);
+    expect(isPushServiceEndpoint(endpoint, [host])).toBe(true);
+  });
+
   it("still rejects http, ports and userinfo on an extraHosts host", () => {
     const extra = [/^push\.example\.com$/];
     expect(isPushServiceEndpoint("http://push.example.com/abc", extra)).toBe(false);
@@ -106,6 +115,10 @@ describe("isValidSubscription", () => {
     ["a long auth", { ...valid, keys: { p256dh: P256DH, auth: `${AUTH}A` } }],
     ["a standard-base64 key", { ...valid, keys: { p256dh: `+${P256DH.slice(1)}`, auth: AUTH } }],
     ["a non-string key", { ...valid, keys: { p256dh: P256DH, auth: 1 } }],
+    [
+      "a key with more than two padding characters",
+      { ...valid, keys: { p256dh: P256DH, auth: `${AUTH}===` } },
+    ],
   ])("rejects %s", (_, value) => {
     expect(isValidSubscription(value)).toBe(false);
   });
