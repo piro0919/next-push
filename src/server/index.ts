@@ -15,6 +15,7 @@ export type {
   UserIdResolver,
 } from "./createPushHandler";
 export { createPushHandler } from "./createPushHandler";
+export { isPushServiceEndpoint, isValidSubscription } from "./pushEndpoint";
 export type { SendPushConfig } from "./sendPush";
 export { sendPush } from "./sendPush";
 export type { BatchSendOptions, BatchSendResult } from "./sendPushBatch";

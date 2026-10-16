@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { createPushHandler } from "./createPushHandler";
 
+/** Base64url keys of the lengths a browser produces (65 and 16 bytes). */
+const P256DH_LENGTH = 87;
+const AUTH_LENGTH = 22;
+const P256DH = `B${"A".repeat(P256DH_LENGTH - 1)}`;
+const AUTH = "A".repeat(AUTH_LENGTH);
+
 describe("createPushHandler", () => {
   it("POST calls onSubscribe and returns 201", async () => {
     const onSubscribe = vi.fn();
@@ -8,7 +14,7 @@ describe("createPushHandler", () => {
     const { POST } = createPushHandler({ onSubscribe, onUnsubscribe });
     const body = {
       endpoint: "https://fcm.googleapis.com/fcm/send/abc",
-      keys: { p256dh: "p", auth: "a" },
+      keys: { p256dh: P256DH, auth: AUTH },
     };
     const req = new Request("http://localhost/api/push", {
       method: "POST",
@@ -23,7 +29,7 @@ describe("createPushHandler", () => {
   describe("user identity", () => {
     const sub = {
       endpoint: "https://fcm.googleapis.com/fcm/send/abc",
-      keys: { p256dh: "p", auth: "a" },
+      keys: { p256dh: P256DH, auth: AUTH },
     };
     const post = (body: unknown) =>
       new Request("http://localhost/api/push", {
@@ -166,6 +172,58 @@ describe("createPushHandler", () => {
     expect(res.status).toBe(400);
   });
 
+  it.each([
+    ["an endpoint on an unknown host", "https://evil.example.com/fcm/send/abc", P256DH, AUTH],
+    ["an http endpoint", "http://fcm.googleapis.com/fcm/send/abc", P256DH, AUTH],
+    ["an endpoint with a port", "https://fcm.googleapis.com:8443/fcm/send/abc", P256DH, AUTH],
+    ["a p256dh of the wrong length", "https://fcm.googleapis.com/fcm/send/abc", "p", AUTH],
+    ["an auth of the wrong length", "https://fcm.googleapis.com/fcm/send/abc", P256DH, "a"],
+  ])("POST returns 400 for %s without calling onSubscribe", async (_, endpoint, p256dh, auth) => {
+    const onSubscribe = vi.fn();
+    const { POST } = createPushHandler({ onSubscribe, onUnsubscribe: vi.fn() });
+    const req = new Request("http://localhost/api/push", {
+      method: "POST",
+      body: JSON.stringify({ endpoint, keys: { p256dh, auth } }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(onSubscribe).not.toHaveBeenCalled();
+  });
+
+  it("POST accepts a host listed in extraPushHosts", async () => {
+    const onSubscribe = vi.fn();
+    const { POST } = createPushHandler({
+      onSubscribe,
+      onUnsubscribe: vi.fn(),
+      extraPushHosts: [/^push\.example\.com$/],
+    });
+    const body = {
+      endpoint: "https://push.example.com/send/abc",
+      keys: { p256dh: P256DH, auth: AUTH },
+    };
+    const req = new Request("http://localhost/api/push", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    expect(onSubscribe).toHaveBeenCalledWith(body, req, undefined);
+  });
+
+  it("DELETE accepts an https endpoint outside the push service allowlist", async () => {
+    const onUnsubscribe = vi.fn();
+    const { DELETE } = createPushHandler({ onSubscribe: vi.fn(), onUnsubscribe });
+    const req = new Request(
+      "http://localhost/api/push?endpoint=https%3A%2F%2Fold.example.com%2Fsend%2Fabc",
+      { method: "DELETE" },
+    );
+    const res = await DELETE(req);
+    expect(res.status).toBe(204);
+    expect(onUnsubscribe).toHaveBeenCalledWith("https://old.example.com/send/abc", req, undefined);
+  });
+
   it("DELETE with endpoint query param returns 204", async () => {
     const onUnsubscribe = vi.fn();
     const { DELETE } = createPushHandler({
@@ -219,7 +277,7 @@ describe("createPushHandler", () => {
     // Build a body that is genuinely > 8192 bytes
     const largeBody = JSON.stringify({
       endpoint: "https://fcm.googleapis.com/fcm/send/abc",
-      keys: { p256dh: "p", auth: "a" },
+      keys: { p256dh: P256DH, auth: AUTH },
       extra: "x".repeat(9000),
     });
     const req = new Request("http://localhost/api/push", {
@@ -238,7 +296,7 @@ describe("createPushHandler", () => {
     });
     const body = JSON.stringify({
       endpoint: "https://fcm.googleapis.com/fcm/send/abc",
-      keys: { p256dh: "p", auth: "a" },
+      keys: { p256dh: P256DH, auth: AUTH },
     });
     const req = new Request("http://localhost/api/push", {
       method: "POST",

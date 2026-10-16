@@ -118,6 +118,55 @@ How a body `userId` is handled:
 If you write your own subscribe endpoint instead of using `createPushHandler`,
 apply the same rule: resolve the user from the session, not from the body.
 
+## Security: which endpoints are accepted
+
+A subscription's `endpoint` is a URL your server later POSTs to when it sends a
+notification. If the subscribe endpoint stored any URL, anyone could make your
+server send requests to a host of their choice, or register hosts that never
+respond and stall a batch send.
+
+So `createPushHandler` only accepts subscriptions a browser could have produced
+(`isValidSubscription`), and returns `400` otherwise:
+
+- The endpoint is `https`, has no port and no user or password, is at most 1000
+  characters, and its host is one of the browser push services:
+
+  | Browser | Hosts |
+  |---|---|
+  | Chrome and other Chromium browsers | `fcm.googleapis.com`, `android.googleapis.com`, `jmt<n>.google.com` |
+  | Firefox | `updates.push.services.mozilla.com` |
+  | Safari | `push.apple.com` and its subdomains |
+  | Edge | `*.notify.windows.com` |
+
+- `keys.p256dh` and `keys.auth` are base64url of exactly 65 and 16 bytes.
+
+If a browser starts returning a host this release does not know yet, add it
+with `extraPushHosts` instead of waiting for an update. Anchor each pattern, or
+a lookalike host also matches:
+
+```ts
+export const { POST, DELETE } = createPushHandler({
+  extraPushHosts: [/^push\.example\.com$/],
+  onSubscribe: async (sub) => { /* save to DB */ },
+  onUnsubscribe: async (endpoint) => { /* delete from DB */ },
+});
+```
+
+`DELETE` still only requires an `https` endpoint. It makes no outbound request,
+and a stricter check would stop you removing rows saved before this check
+existed.
+
+The same checks are exported for your own subscribe endpoint, or for rows you
+saved before upgrading:
+
+```ts
+import { isPushServiceEndpoint, isValidSubscription } from "@piro0919/next-push/server";
+
+isPushServiceEndpoint("https://fcm.googleapis.com/fcm/send/abc"); // true
+isPushServiceEndpoint("https://example.com/hook"); // false
+isValidSubscription(body, [/^push\.example\.com$/]); // second argument = extra hosts
+```
+
 ## Non-Next.js usage
 
 `createPushHandler` accepts a Fetch `Request` and returns a `Response`, so any runtime with the Fetch API can use it with a thin adapter.
@@ -228,7 +277,7 @@ Returns a discriminated `SendResult`:
 - `{ ok: false, gone: true, statusCode: 404 | 410 }` — subscription is dead, delete it
 - `{ ok: false, gone: false, error, statusCode? }` — other failure (transient or misconfig)
 
-### `createPushHandler({ onSubscribe, onUnsubscribe, getUserId? })`
+### `createPushHandler({ onSubscribe, onUnsubscribe, getUserId?, extraPushHosts? })`
 
 Returns `{ POST, DELETE }` ready to re-export from `app/api/push/route.ts`.
 
@@ -237,8 +286,13 @@ Returns `{ POST, DELETE }` ready to re-export from `app/api/push/route.ts`.
 | `onSubscribe(sub, req, ctx?)` | `ctx.userId` is the user `getUserId` resolved, or absent for anonymous visitors |
 | `onUnsubscribe(endpoint, req, ctx?)` | Same `ctx` as above, so you can scope the delete to the caller |
 | `getUserId(req)` | Returns the signed-in user's id from your session, or `null`. The only source of `ctx.userId` |
+| `extraPushHosts` | `RegExp[]` matched against the endpoint's hostname, accepted in addition to the browser push services. See [Security: which endpoints are accepted](#security-which-endpoints-are-accepted) |
 
-Responses: `201` subscribed, `204` unsubscribed, `400` malformed JSON or subscription, `403` client-supplied `userId` rejected, `413` body over 8 KB, `500` your callback threw.
+Responses: `201` subscribed, `204` unsubscribed, `400` malformed JSON, or a subscription that is not from a browser push service, `403` client-supplied `userId` rejected, `413` body over 8 KB, `500` your callback threw.
+
+### `isPushServiceEndpoint(endpoint, extraHosts?)` / `isValidSubscription(value, extraHosts?)`
+
+The checks `createPushHandler` runs on POST, exported from `@piro0919/next-push/server`. `isValidSubscription` narrows `value` to `PushSubscriptionJSON`.
 
 ### Service Worker helpers
 

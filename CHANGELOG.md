@@ -4,6 +4,34 @@ All notable changes to this project are documented here. This project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html); breaking changes
 before 1.0 may land in minor releases.
 
+## 3.0.0 - Unreleased
+
+### BREAKING
+
+- `createPushHandler` POST now rejects, with 400, subscriptions whose
+  endpoint is not a browser push service. Before, any `https://` URL was
+  accepted, so anyone could register an arbitrary host and make your sender
+  POST to it, or register hosts that never respond and stall a batch send.
+  Accepted hosts are FCM (`fcm.googleapis.com`, `android.googleapis.com`,
+  `jmt<n>.google.com`), Mozilla, `push.apple.com` and its subdomains, and
+  `*.notify.windows.com`. The endpoint must also have no port or userinfo
+  and be at most 1000 characters, and `keys.p256dh` / `keys.auth` must be
+  base64url of exactly 65 / 16 bytes.
+
+  Migration: subscriptions from real browsers keep working with no change.
+  If you send to a push service outside the list, pass its host in
+  `extraPushHosts`. Rows saved before upgrading may contain endpoints that
+  would now be rejected; you can find them with `isValidSubscription`.
+  DELETE still accepts any `https://` endpoint, so those rows can be removed.
+
+### Added
+
+- `isPushServiceEndpoint(endpoint, extraHosts?)` and
+  `isValidSubscription(value, extraHosts?)`, exported from
+  `@piro0919/next-push/server`.
+- `extraPushHosts` option on `createPushHandler`, for push service hosts a
+  browser starts using before this library knows them.
+
 ## 2.0.0 - 2026-10-01
 
 > Entries for 1.0.0 and 1.0.1 were not recorded here. Their changes are in the

@@ -64,3 +64,28 @@ Because the SW is served at `/serwist/sw.js`, the demo page passes `usePush({ sw
 
 - Design spec: [docs/superpowers/specs/2026-04-21-next-push-design.md](docs/superpowers/specs/2026-04-21-next-push-design.md)
 - Implementation plan: [docs/superpowers/plans/2026-04-21-next-push-v0.1-implementation.md](docs/superpowers/plans/2026-04-21-next-push-v0.1-implementation.md)
+
+## Next task: push service endpoint check (v3.0.0)
+
+Agreed on 2026-10-16 in a home-window session. Implemented on 2026-10-16 (code, tests, README, CHANGELOG under "3.0.0 - Unreleased"); not committed, version not bumped, not published. The extra-hosts option is named `extraPushHosts` (name delegated to Claude).
+
+### Why
+
+The same "accept only browser push services as subscription endpoints" check has been copied into koidamashii (`src/lib/push.ts`), jumps-lab (`src/lib/push-endpoint.ts`) and spatto (`packages/db/src/push-endpoint.ts`), and the copies have already drifted (koidamashii lacks `android.googleapis.com` and the subdomains of `push.apple.com`). When Chromium started returning `jmt17.google.com` endpoints (2026-10-14), each repo had to be fixed separately.
+
+`createPushHandler` currently only checks that the endpoint starts with `https://`, so anyone can register an arbitrary host. The sender then POSTs to it (SSRF), and unresponsive hosts can stall a batch send.
+
+### What to build
+
+- Export `isPushServiceEndpoint(endpoint: string): boolean` and `isValidSubscription(value: unknown): value is PushSubscriptionJSON` from `@piro0919/next-push/server`.
+- Port them from jumps-lab's `src/lib/push-endpoint.ts`, which is the most complete copy: host allowlist (FCM, `android.googleapis.com`, `jmt<n>.google.com`, Mozilla, `*.push.apple.com`, `*.notify.windows.com`), https only, no port / userinfo, max length 1000, base64url keys with exact lengths (p256dh 87 chars, auth 22 chars).
+- `createPushHandler` POST rejects subscriptions that fail `isValidSubscription` with 400 **by default**. Decided: on by default, not opt-in, because opt-in leaves the SSRF hole open for every existing user. This is a breaking change → major version 3.0.0.
+- DELETE keeps the current `https://` check only (it makes no outbound request, and stricter checks would block removing old rows).
+- Provisional (decided by Claude when delegated, revisit if it feels wrong): an option on `createPushHandler` to add extra host patterns, so users are not stuck waiting for a release when a browser changes its push host again. `sendPush` / `sendPushBatch` stay unchanged in this release.
+- Unit tests for each host, the rejections (unknown host, http, port, userinfo, long URL, bad key lengths), and the handler returning 400.
+- Update README, CHANGELOG (breaking change and migration note), and the demo if it is affected.
+
+### After publishing
+
+- jumps-lab (on 2.0.0) and koidamashii (on ^1.0.1, so it also crosses the 2.0 changes) switch to the exported functions and delete their local copies.
+- spatto does not depend on next-push; leave its copy alone unless decided otherwise.

@@ -1,4 +1,5 @@
 import type { PushSubscriptionJSON } from "../core/types";
+import { isValidSubscription } from "./pushEndpoint";
 
 export interface SubscribeContext {
   /** The user this subscription belongs to, as resolved on the server by
@@ -33,6 +34,13 @@ export interface CreatePushHandlerConfig {
    * has no way to verify it.
    */
   getUserId?: UserIdResolver;
+  /**
+   * Hostname patterns accepted as subscription endpoints in addition to the
+   * built-in browser push services (FCM, Mozilla, Apple, WNS). Use it when a
+   * browser starts returning a host this release does not know yet. Anchor
+   * each pattern, e.g. `/^push\.example\.com$/`.
+   */
+  extraPushHosts?: readonly RegExp[];
 }
 
 export interface PushHandler {
@@ -75,17 +83,9 @@ export function createPushHandler(config: CreatePushHandlerConfig): PushHandler 
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
-        if (!isObject(body)) {
-          return new Response("Invalid subscription", { status: 400 });
-        }
-        const keys = body.keys;
-        if (
-          typeof body.endpoint !== "string" ||
-          !body.endpoint.startsWith("https://") ||
-          !isObject(keys) ||
-          !keys.p256dh ||
-          !keys.auth
-        ) {
+        // Only browser push service endpoints are accepted, so the sender is
+        // never made to POST to an arbitrary host.
+        if (!isObject(body) || !isValidSubscription(body, config.extraPushHosts)) {
           return new Response("Invalid subscription", { status: 400 });
         }
 

@@ -2,9 +2,13 @@ import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
 import { createPushHandler } from "./createPushHandler";
 
+/** Base64url keys of the lengths a browser produces (16 and 65 bytes). */
+const AUTH_LENGTH = 22;
+const P256DH_LENGTH = 87;
+
 const validSubscription = {
   endpoint: "https://fcm.googleapis.com/fcm/send/abc",
-  keys: { auth: "a", p256dh: "p" },
+  keys: { auth: "A".repeat(AUTH_LENGTH), p256dh: `B${"A".repeat(P256DH_LENGTH - 1)}` },
 };
 
 describe("createPushHandler framework-agnostic adapters", () => {
