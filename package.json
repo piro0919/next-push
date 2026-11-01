@@ -116,7 +116,7 @@
     "@vercel/analytics": "2.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.2",
-    "happy-dom": "^20.14.6",
+    "happy-dom": "^21.0.4",
     "hono": "^4.13.14",
     "lefthook": "^2.2.2",
     "next": "^16.4.3",
@@ -125,9 +125,9 @@
     "react-ios-pwa-prompt": "2.0.6",
     "serwist": "^9.5.13",
     "tailwindcss": "^4.3.3",
-    "tsup": "^8.5.1",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
-    "use-pwa": "^3.1.0",
-    "vitest": "^4.1.12"
+    "use-pwa": "^4.0.0",
+    "vitest": "^5.0.5"
   }
 }
