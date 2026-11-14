@@ -117,7 +117,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.2",
     "happy-dom": "^20.14.6",
-    "hono": "^4.13.17",
+    "hono": "^4.13.18",
     "lefthook": "^2.2.2",
     "next": "^16.4.6",
     "react": "^19.3.1",
