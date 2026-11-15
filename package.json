@@ -102,7 +102,7 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.6",
+    "@biomejs/biome": "^2.6.7",
     "@piro0919/biome-config": "github:piro0919/biome-config#v1.1.0",
     "@playwright/test": "^1.65.0",
     "@serwist/turbopack": "^9.5.13",
