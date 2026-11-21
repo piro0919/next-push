@@ -102,9 +102,9 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.7",
+    "@biomejs/biome": "^2.6.8",
     "@piro0919/biome-config": "github:piro0919/biome-config#v1.1.0",
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.65.1",
     "@serwist/turbopack": "^9.5.13",
     "@tailwindcss/postcss": "^4.3.5",
     "@testing-library/jest-dom": "^7.0.1",
@@ -117,7 +117,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "esbuild-wasm": "^0.28.2",
     "happy-dom": "^21.0.4",
-    "hono": "^4.13.18",
+    "hono": "^4.13.19",
     "lefthook": "^2.2.2",
     "next": "^16.4.6",
     "react": "^19.3.1",
