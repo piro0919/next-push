@@ -25,8 +25,8 @@ importers:
         specifier: ^1.65.1
         version: 1.65.1
       '@serwist/turbopack':
-        specifier: ^9.5.13
-        version: 9.5.13(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.9)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        specifier: ^9.5.15
+        version: 9.5.15(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.9)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
@@ -79,8 +79,8 @@ importers:
         specifier: 2.0.6
         version: 2.0.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       serwist:
-        specifier: ^9.5.13
-        version: 9.5.13(browserslist@4.29.3)(typescript@6.0.3)
+        specifier: ^9.5.15
+        version: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
       tailwindcss:
         specifier: ^4.3.5
         version: 4.3.5
@@ -525,6 +525,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@isaacs/nonrecursive-glob-match@1.1.0':
+    resolution: {integrity: sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==}
+
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -864,8 +867,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@serwist/build@9.5.13':
-    resolution: {integrity: sha512-3seu43B26paWNKixMJTJWXBJx8c07e+WZvPOUH5V/AByYfAoL4TKh9vMri8zukyj52shDyChs2Qjji5NObprMQ==}
+  '@serwist/build@9.5.15':
+    resolution: {integrity: sha512-NnRRuYDKA5nwyM63g9TvwQqC+adPirQgzEviSmiXoVgs6fpRk4BfekUAuqGj5WLOvHhnYSJ8TnQyqByiEgKljQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -873,8 +876,8 @@ packages:
       typescript:
         optional: true
 
-  '@serwist/turbopack@9.5.13':
-    resolution: {integrity: sha512-7QfoFoXdU+HL7mUHwnnSYmJMK0vJo1WEyr+7jIXfgPkdEvol4BlrgWg1PrbGqWqLZkud5IhMiQm7gbfx7N44MQ==}
+  '@serwist/turbopack@9.5.15':
+    resolution: {integrity: sha512-B4Es147O2Mnfy/QGCCiV0ELQY5UusE/6q7D+HbWr2+O+NE7dM7Lyi6Qp3k8x1xf0bt1lcfObqagCtiWBneiybg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       esbuild: '>=0.25.0 <1.0.0'
@@ -890,16 +893,16 @@ packages:
       typescript:
         optional: true
 
-  '@serwist/utils@9.5.13':
-    resolution: {integrity: sha512-jJJSvl0pSc6udJ7pN2u0oduOfQqSY6oJNjbIc82YcVnkpzj1O+qFHYdrR6tu9bspa30Nc8ZVV+VncOcyguvk5w==}
+  '@serwist/utils@9.5.15':
+    resolution: {integrity: sha512-JhSSoiAfADr1Sn+zc9pdWjPL9WBqNe/3A99nkLj3yJRioqhR/p5WQovc1gJiDpptzAEJzB4qfFOObT0tsGf8Yw==}
     peerDependencies:
       browserslist: '>=4'
     peerDependenciesMeta:
       browserslist:
         optional: true
 
-  '@serwist/window@9.5.13':
-    resolution: {integrity: sha512-1xOBy3Cpe1qZ33GwQSeQk8fyklYc7wZsYzpmHq37RowRMaHvrKQkUFTUoZPyQG5YWwmvDbFVgOGba7UbXNhHfQ==}
+  '@serwist/window@9.5.15':
+    resolution: {integrity: sha512-OIfXK68StLcAP0eYxEQg5YtjhITdsijMsVmxuDyQL6+uIgXyY6eUAt2lvrKQcOIGbiX2Kma/nTYncWoLh0WjuA==}
     peerDependencies:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
@@ -1370,8 +1373,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  glob@13.0.6:
-    resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
+  glob@14.0.6:
+    resolution: {integrity: sha512-OwXjVP2svY5EyLY75Vek96C8qK43gqrt4xsZ+qSILdnaEiJPXkd62mcfUSNx/TQErQRdu5uM5kF67sfONragKw==}
     engines: {node: 18 || 20 || >=22}
 
   graceful-fs@4.2.12:
@@ -1572,9 +1575,9 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  minimatch@10.2.6:
-    resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
-    engines: {node: 18 || 20 || >=22}
+  minimatch@11.0.9:
+    resolution: {integrity: sha512-KCFkfyjqerNlSstjlhIGNXIKZGA/6O4V4RlhZ+Dsr621SPPw0mzlypE9D9ZOoPiVefHID+j7/XuMMlqfD/F60Q==}
+    engines: {node: 20 || >=22}
 
   minipass@7.1.3:
     resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
@@ -1624,8 +1627,8 @@ packages:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
 
-  path-scurry@2.0.2:
-    resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
+  path-scurry@3.0.0:
+    resolution: {integrity: sha512-1pTbQqH1wIwMi/eleQ5leFTTCkzFsPcgXNjwOA8YGGW/W4/kHT3dssE7Z6NH+zuqNLOzOB0uaD61yl7cAcVhgg==}
     engines: {node: 18 || 20 || >=22}
 
   pathe@2.0.3:
@@ -1746,8 +1749,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  serwist@9.5.13:
-    resolution: {integrity: sha512-ZpskCei2d5Zcljeb6QvYP94pV5xY3GCdbOk0hOzMSEPFOqJDwJvMpQq7i1r/psuR1WQCsKX6p7UpLle6sTPYjw==}
+  serwist@9.5.15:
+    resolution: {integrity: sha512-k//vx8zoecklv5d3KIIq1afVJOn91uhyj/k/9loEsAETHw/v3o3W7WdTnBrMGgJHZjC6OHPpOSgENprkROiFQw==}
     peerDependencies:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
@@ -1990,8 +1993,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  zod@4.6.5:
-    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
@@ -2265,6 +2268,8 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
+  '@isaacs/nonrecursive-glob-match@1.1.0': {}
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
@@ -2459,33 +2464,33 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.68.3':
     optional: true
 
-  '@serwist/build@9.5.13(browserslist@4.29.3)(typescript@6.0.3)':
+  '@serwist/build@9.5.15(browserslist@4.29.3)(typescript@6.0.3)':
     dependencies:
-      '@serwist/utils': 9.5.13(browserslist@4.29.3)
+      '@serwist/utils': 9.5.15(browserslist@4.29.3)
       common-tags: 1.8.2
-      glob: 13.0.6
+      glob: 14.0.6
       pretty-bytes: 6.1.1
       source-map: 0.8.0
       type-fest: 5.10.0
-      zod: 4.6.5
+      zod: 4.6.7
     optionalDependencies:
       typescript: 6.0.3
     transitivePeerDependencies:
       - browserslist
 
-  '@serwist/turbopack@9.5.13(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.9)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
+  '@serwist/turbopack@9.5.15(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.9)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
     dependencies:
-      '@serwist/build': 9.5.13(browserslist@4.29.3)(typescript@6.0.3)
-      '@serwist/utils': 9.5.13(browserslist@4.29.3)
-      '@serwist/window': 9.5.13(browserslist@4.29.3)(typescript@6.0.3)
+      '@serwist/build': 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+      '@serwist/utils': 9.5.15(browserslist@4.29.3)
+      '@serwist/window': 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
       '@swc/core': 1.16.13(@swc/helpers@0.5.23)
       browserslist: 4.29.3
       kolorist: 1.8.0
       next: 16.4.6(@playwright/test@1.65.1)(@types/node@25.9.9)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       semver: 7.8.5
-      serwist: 9.5.13(browserslist@4.29.3)(typescript@6.0.3)
-      zod: 4.6.5
+      serwist: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+      zod: 4.6.7
     optionalDependencies:
       esbuild: 0.28.2
       esbuild-wasm: 0.28.2
@@ -2493,14 +2498,14 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  '@serwist/utils@9.5.13(browserslist@4.29.3)':
+  '@serwist/utils@9.5.15(browserslist@4.29.3)':
     optionalDependencies:
       browserslist: 4.29.3
 
-  '@serwist/window@9.5.13(browserslist@4.29.3)(typescript@6.0.3)':
+  '@serwist/window@9.5.15(browserslist@4.29.3)(typescript@6.0.3)':
     dependencies:
       '@types/trusted-types': 2.0.7
-      serwist: 9.5.13(browserslist@4.29.3)(typescript@6.0.3)
+      serwist: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
     optionalDependencies:
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -2872,11 +2877,11 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  glob@13.0.6:
+  glob@14.0.6:
     dependencies:
-      minimatch: 10.2.6
+      minimatch: 11.0.9
       minipass: 7.1.3
-      path-scurry: 2.0.2
+      path-scurry: 3.0.0
 
   graceful-fs@4.2.12: {}
 
@@ -3025,8 +3030,9 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  minimatch@10.2.6:
+  minimatch@11.0.9:
     dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.1.0
       brace-expansion: 5.0.13
 
   minipass@7.1.3: {}
@@ -3079,7 +3085,7 @@ snapshots:
 
   obug@3.0.0: {}
 
-  path-scurry@2.0.2:
+  path-scurry@3.0.0:
     dependencies:
       lru-cache: 11.5.3
       minipass: 7.1.3
@@ -3220,9 +3226,9 @@ snapshots:
   semver@7.8.6:
     optional: true
 
-  serwist@9.5.13(browserslist@4.29.3)(typescript@6.0.3):
+  serwist@9.5.15(browserslist@4.29.3)(typescript@6.0.3):
     dependencies:
-      '@serwist/utils': 9.5.13(browserslist@4.29.3)
+      '@serwist/utils': 9.5.15(browserslist@4.29.3)
       idb: 8.0.3
     optionalDependencies:
       typescript: 6.0.3
@@ -3408,4 +3414,4 @@ snapshots:
 
   ws@8.23.0: {}
 
-  zod@4.6.5: {}
+  zod@4.6.7: {}
