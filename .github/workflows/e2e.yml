@@ -35,7 +35,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps ${{ matrix.project == 'chrome' && 'chromium chrome' || matrix.project }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.project == 'chrome' && 'chrome' || matrix.project }}
       - name: Run Playwright
         run: pnpm exec playwright test --project=${{ matrix.project }}
         env:
