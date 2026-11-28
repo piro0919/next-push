@@ -25,8 +25,8 @@ importers:
         specifier: ^1.65.1
         version: 1.65.1
       '@serwist/turbopack':
-        specifier: ^9.5.15
-        version: 9.5.15(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.12)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        specifier: ^9.6.0
+        version: 9.6.0(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.12)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
@@ -79,8 +79,8 @@ importers:
         specifier: 2.0.6
         version: 2.0.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       serwist:
-        specifier: ^9.5.15
-        version: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+        specifier: ^9.6.0
+        version: 9.6.0(browserslist@4.29.3)(typescript@6.0.3)
       tailwindcss:
         specifier: ^4.3.5
         version: 4.3.5
@@ -867,8 +867,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@serwist/build@9.5.15':
-    resolution: {integrity: sha512-NnRRuYDKA5nwyM63g9TvwQqC+adPirQgzEviSmiXoVgs6fpRk4BfekUAuqGj5WLOvHhnYSJ8TnQyqByiEgKljQ==}
+  '@serwist/build@9.6.0':
+    resolution: {integrity: sha512-I+PTTYsR5JVH8VczXnPmIoRi24MXpg2ApKps4GCFg48vhcQ2n2TAvpQpiMrksf5f9AgvBzIjp8y5aYlkFEk27A==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -876,8 +876,8 @@ packages:
       typescript:
         optional: true
 
-  '@serwist/turbopack@9.5.15':
-    resolution: {integrity: sha512-B4Es147O2Mnfy/QGCCiV0ELQY5UusE/6q7D+HbWr2+O+NE7dM7Lyi6Qp3k8x1xf0bt1lcfObqagCtiWBneiybg==}
+  '@serwist/turbopack@9.6.0':
+    resolution: {integrity: sha512-sGsaPlgMc3nYmaXxSWUJmQ+nmBpUwgOhzre1xtRi49fYosEcgDZBkXl16TTTelbK9SNM3LuquE2NSzRyeOaqVA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       esbuild: '>=0.25.0 <1.0.0'
@@ -893,16 +893,16 @@ packages:
       typescript:
         optional: true
 
-  '@serwist/utils@9.5.15':
-    resolution: {integrity: sha512-JhSSoiAfADr1Sn+zc9pdWjPL9WBqNe/3A99nkLj3yJRioqhR/p5WQovc1gJiDpptzAEJzB4qfFOObT0tsGf8Yw==}
+  '@serwist/utils@9.6.0':
+    resolution: {integrity: sha512-e4HdJE4tEeaaBh2ODOLIvqvb1aep2CZxJloah4puLAgx7l4jMwJutdr6zk3RmWbP12mJKjPMsGC28nWxHUtRAw==}
     peerDependencies:
       browserslist: '>=4'
     peerDependenciesMeta:
       browserslist:
         optional: true
 
-  '@serwist/window@9.5.15':
-    resolution: {integrity: sha512-OIfXK68StLcAP0eYxEQg5YtjhITdsijMsVmxuDyQL6+uIgXyY6eUAt2lvrKQcOIGbiX2Kma/nTYncWoLh0WjuA==}
+  '@serwist/window@9.6.0':
+    resolution: {integrity: sha512-7PKU0fCHZaug+O7a3TiKokH39VqVJRMpEduHIwZKNGXHbls3udh23D0l/yXpbhFVIsz/e8L7sZ7DIwZfeD95Hg==}
     peerDependencies:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
@@ -1749,8 +1749,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  serwist@9.5.15:
-    resolution: {integrity: sha512-k//vx8zoecklv5d3KIIq1afVJOn91uhyj/k/9loEsAETHw/v3o3W7WdTnBrMGgJHZjC6OHPpOSgENprkROiFQw==}
+  serwist@9.6.0:
+    resolution: {integrity: sha512-uCKap2fCpZ+y30dcO1b3Z9BpStPjFaehWgH32msBy0rOvjBuGzDbb9mydH/oasd+B9LcFuEaGGcdhlDhZPIoYA==}
     peerDependencies:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
@@ -2464,9 +2464,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.68.3':
     optional: true
 
-  '@serwist/build@9.5.15(browserslist@4.29.3)(typescript@6.0.3)':
+  '@serwist/build@9.6.0(browserslist@4.29.3)(typescript@6.0.3)':
     dependencies:
-      '@serwist/utils': 9.5.15(browserslist@4.29.3)
+      '@serwist/utils': 9.6.0(browserslist@4.29.3)
       common-tags: 1.8.2
       glob: 14.0.6
       pretty-bytes: 6.1.1
@@ -2478,18 +2478,18 @@ snapshots:
     transitivePeerDependencies:
       - browserslist
 
-  '@serwist/turbopack@9.5.15(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.12)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
+  '@serwist/turbopack@9.6.0(@swc/helpers@0.5.23)(esbuild-wasm@0.28.2)(esbuild@0.28.2)(next@16.4.6(@playwright/test@1.65.1)(@types/node@25.9.12)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
     dependencies:
-      '@serwist/build': 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
-      '@serwist/utils': 9.5.15(browserslist@4.29.3)
-      '@serwist/window': 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+      '@serwist/build': 9.6.0(browserslist@4.29.3)(typescript@6.0.3)
+      '@serwist/utils': 9.6.0(browserslist@4.29.3)
+      '@serwist/window': 9.6.0(browserslist@4.29.3)(typescript@6.0.3)
       '@swc/core': 1.16.13(@swc/helpers@0.5.23)
       browserslist: 4.29.3
       kolorist: 1.8.0
       next: 16.4.6(@playwright/test@1.65.1)(@types/node@25.9.12)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       semver: 7.8.5
-      serwist: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+      serwist: 9.6.0(browserslist@4.29.3)(typescript@6.0.3)
       zod: 4.6.7
     optionalDependencies:
       esbuild: 0.28.2
@@ -2498,14 +2498,14 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  '@serwist/utils@9.5.15(browserslist@4.29.3)':
+  '@serwist/utils@9.6.0(browserslist@4.29.3)':
     optionalDependencies:
       browserslist: 4.29.3
 
-  '@serwist/window@9.5.15(browserslist@4.29.3)(typescript@6.0.3)':
+  '@serwist/window@9.6.0(browserslist@4.29.3)(typescript@6.0.3)':
     dependencies:
       '@types/trusted-types': 2.0.7
-      serwist: 9.5.15(browserslist@4.29.3)(typescript@6.0.3)
+      serwist: 9.6.0(browserslist@4.29.3)(typescript@6.0.3)
     optionalDependencies:
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -3226,9 +3226,9 @@ snapshots:
   semver@7.8.6:
     optional: true
 
-  serwist@9.5.15(browserslist@4.29.3)(typescript@6.0.3):
+  serwist@9.6.0(browserslist@4.29.3)(typescript@6.0.3):
     dependencies:
-      '@serwist/utils': 9.5.15(browserslist@4.29.3)
+      '@serwist/utils': 9.6.0(browserslist@4.29.3)
       idb: 8.0.3
     optionalDependencies:
       typescript: 6.0.3
